@@ -27,4 +27,8 @@ include(":app")
 include(":core:entity")
 include(":core:domain")
 include(":core:ui")
+include(":core:datastore")
+include(":onboarding:domain")
+include(":onboarding:data")
+include(":onboarding:presentation")
  

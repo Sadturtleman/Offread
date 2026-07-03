@@ -20,16 +20,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.DialogProperties
 import androidx.navigation3.runtime.NavKey
 import com.android.offread.core.domain.message.MessageEffect
-import com.android.offread.core.domain.navigation.HomePage
 import com.android.offread.core.ui.helper.LocalMessageHelper
 import com.android.offread.core.ui.helper.rememberSingleClick
+import com.android.offread.onboarding.domain.SplashPage
 import com.android.offread.ui.theme.OffreadTheme
 import kotlinx.coroutines.flow.Flow
 
 @Composable
 fun RootComposable(
     modifier: Modifier = Modifier,
-    startStack: List<NavKey> = listOf(GenericNavKey(HomePage.PATH)),
+    startStack: List<NavKey> = listOf(GenericNavKey(SplashPage.PATH)),
 ) {
     val snackBarHostState = remember { SnackbarHostState() }
     var oneButtonDialogEffect by remember {

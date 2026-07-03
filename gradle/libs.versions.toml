@@ -30,6 +30,9 @@ composeRulesKtlint = "0.5.9"
 # architecture test
 konsist = "0.17.3"
 
+# datastore
+datastore = "1.2.1"
+
 # logging
 timber = "5.0.1"
 
@@ -78,6 +81,10 @@ ktlint-compose = { module = "io.nlopez.compose.rules:ktlint", version.ref = "com
 
 # architecture test
 konsist = { group = "com.lemonappdev", name = "konsist", version.ref = "konsist" }
+
+# datastore
+androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
+androidx-datastore-preferences-core = { group = "androidx.datastore", name = "datastore-preferences-core", version.ref = "datastore" }
 
 # logging
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
