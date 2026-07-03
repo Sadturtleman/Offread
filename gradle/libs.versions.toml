@@ -33,6 +33,9 @@ konsist = "0.17.3"
 # datastore
 datastore = "1.2.1"
 
+# room
+room = "2.7.1"
+
 # logging
 timber = "5.0.1"
 
@@ -85,6 +88,10 @@ konsist = { group = "com.lemonappdev", name = "konsist", version.ref = "konsist"
 # datastore
 androidx-datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore" }
 androidx-datastore-preferences-core = { group = "androidx.datastore", name = "datastore-preferences-core", version.ref = "datastore" }
+
+# room
+androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 
 # logging
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }

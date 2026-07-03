@@ -1,7 +1,7 @@
 package com.android.offread.navigation
 
 import com.android.offread.core.domain.navigation.HomePage
-import com.android.offread.home.HomeScreen
+import com.android.offread.library.presentation.LibraryScreen
 import com.android.offread.onboarding.domain.FirstTranslationPage
 import com.android.offread.onboarding.domain.ModelDownloadPage
 import com.android.offread.onboarding.domain.OnboardingIntroPage
@@ -38,7 +38,7 @@ val appRoutes: List<AppRoute> =
         AppRoute(
             path = HomePage.PATH,
             isRoot = true,
-            render = { HomeScreen() },
+            render = { LibraryScreen() },
         ),
     )
 

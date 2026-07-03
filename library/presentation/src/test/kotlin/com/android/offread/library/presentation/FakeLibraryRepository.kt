@@ -1,0 +1,44 @@
+package com.android.offread.library.presentation
+
+import com.android.offread.library.domain.LibraryRepository
+import com.android.offread.library.domain.model.Collection
+import com.android.offread.library.domain.model.LibrarySort
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
+
+/** 인메모리 [LibraryRepository] 더블(presentation 단위 테스트용). */
+class FakeLibraryRepository : LibraryRepository {
+    private val collections = MutableStateFlow<List<Collection>>(emptyList())
+    private var nextId = 0
+    private var clock = 1000L
+
+    override fun observeCollections(sort: LibrarySort): Flow<List<Collection>> =
+        collections.map { list ->
+            when (sort) {
+                LibrarySort.RECENT -> list.sortedByDescending { it.updatedAt }
+                LibrarySort.NAME -> list.sortedBy { it.name.lowercase() }
+            }
+        }
+
+    override suspend fun createCollection(
+        name: String,
+        parentId: String?,
+    ): String {
+        val id = "c${nextId++}"
+        collections.value =
+            collections.value + Collection(id, name, parentId, 0, 0, clock++)
+        return id
+    }
+
+    override suspend fun renameCollection(
+        id: String,
+        name: String,
+    ) {
+        collections.value = collections.value.map { if (it.id == id) it.copy(name = name) else it }
+    }
+
+    override suspend fun deleteCollection(id: String) {
+        collections.value = collections.value.filterNot { it.id == id || it.parentId == id }
+    }
+}
