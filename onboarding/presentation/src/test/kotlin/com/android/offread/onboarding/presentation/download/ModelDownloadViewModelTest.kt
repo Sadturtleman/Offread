@@ -14,6 +14,7 @@ import com.android.offread.onboarding.presentation.MainDispatcherRule
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -46,7 +47,7 @@ class ModelDownloadViewModelTest {
     }
 
     @Test
-    fun `모든 모델 완료 시 온보딩 완료 후 라이브러리로 이동한다`() =
+    fun `모든 모델 완료 시 첫 번역 체험으로 이동한다(완료 표시는 미룸)`() =
         runTest {
             val onboarding = FakeOnboardingRepository(initialPairs = setOf(LanguagePair.JA_KO))
             val models = FakeTranslationModelRepository()
@@ -54,19 +55,18 @@ class ModelDownloadViewModelTest {
 
             models.emitDownloads(mapOf("model-ja_ko" to ModelDownloadStatus.Completed))
 
-            assertEquals(ModelDownloadEffect.NavigateToLibrary, vm.effect.first())
-            assertTrue(onboarding.isOnboardingComplete.first())
+            assertEquals(ModelDownloadEffect.NavigateToFirstTranslation, vm.effect.first())
+            assertFalse(onboarding.isOnboardingComplete.first())
         }
 
     @Test
-    fun `필요한 모델이 없으면 즉시 온보딩을 마친다`() =
+    fun `필요한 모델이 없으면 첫 번역 체험으로 이동한다`() =
         runTest {
             val onboarding = FakeOnboardingRepository(initialPairs = setOf(LanguagePair.JA_KO))
             val models = FakeTranslationModelRepository(installed = setOf(LanguagePair.JA_KO))
             val vm = viewModel(onboarding, models)
 
-            assertEquals(ModelDownloadEffect.NavigateToLibrary, vm.effect.first())
-            assertTrue(onboarding.isOnboardingComplete.first())
+            assertEquals(ModelDownloadEffect.NavigateToFirstTranslation, vm.effect.first())
             assertTrue(models.enqueued.isEmpty())
         }
 

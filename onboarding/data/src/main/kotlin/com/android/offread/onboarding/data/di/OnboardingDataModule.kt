@@ -1,8 +1,10 @@
 package com.android.offread.onboarding.data.di
 
 import com.android.offread.onboarding.data.OnboardingRepositoryImpl
+import com.android.offread.onboarding.data.TranslationEngineImpl
 import com.android.offread.onboarding.data.TranslationModelRepositoryImpl
 import com.android.offread.onboarding.domain.OnboardingRepository
+import com.android.offread.onboarding.domain.TranslationEngine
 import com.android.offread.onboarding.domain.TranslationModelRepository
 import dagger.Binds
 import dagger.Module
@@ -20,4 +22,8 @@ abstract class OnboardingDataModule {
     @Binds
     @Singleton
     abstract fun bindTranslationModelRepository(impl: TranslationModelRepositoryImpl): TranslationModelRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTranslationEngine(impl: TranslationEngineImpl): TranslationEngine
 }

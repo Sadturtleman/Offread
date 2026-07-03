@@ -42,6 +42,9 @@ sealed interface ModelDownloadEvent : ReducerEvent {
 }
 
 sealed interface ModelDownloadEffect : MviEffect {
-    /** 전부 완료 또는 '나중에 하기' → 라이브러리(임시 Home). F-004 붙으면 첫 번역 체험으로 바뀐다. */
+    /** 다운로드할 모델이 있고 전부 완료 → 첫 번역 체험(O-04). */
+    data object NavigateToFirstTranslation : ModelDownloadEffect
+
+    /** '나중에 하기'(모델 미설치) → 온보딩을 마치고 라이브러리로. */
     data object NavigateToLibrary : ModelDownloadEffect
 }

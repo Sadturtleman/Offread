@@ -26,6 +26,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.offread.core.domain.navigation.HomePage
 import com.android.offread.core.ui.helper.LocalNavigationHelper
+import com.android.offread.onboarding.domain.FirstTranslationPage
 
 /**
  * O-03 번역 모델 다운로드(F-003). 진행 상태·일시정지·나중에 하기.
@@ -41,6 +42,7 @@ fun ModelDownloadScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
+                ModelDownloadEffect.NavigateToFirstTranslation -> navigationHelper.navigateTo(FirstTranslationPage)
                 ModelDownloadEffect.NavigateToLibrary -> navigationHelper.navigateTo(HomePage)
             }
         }
