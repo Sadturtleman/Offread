@@ -14,6 +14,7 @@ object AppRoutes {
     const val SPLASH = "splash"
     const val ONBOARDING_INTRO = "onboarding/intro"
     const val MODEL_DOWNLOAD = "onboarding/model-download"
+    const val FIRST_TRANSLATION = "onboarding/first-translation"
 
     const val HOME = "home" // 진입점(라이브러리 자리 임시)
 }

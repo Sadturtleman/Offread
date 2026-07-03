@@ -41,7 +41,8 @@ class ModelDownloadViewModel
             viewModelScope.launch {
                 models = resolveRequiredModels()
                 if (models.isEmpty()) {
-                    finishOnboarding()
+                    // 이미 설치돼 있으면 바로 첫 번역 체험으로.
+                    emitEffect(ModelDownloadEffect.NavigateToFirstTranslation)
                     return@launch
                 }
                 enqueueModelDownloads(models)
@@ -52,7 +53,7 @@ class ModelDownloadViewModel
                         }
                     dispatch(ModelDownloadEvent.ItemsChanged(items))
                     if (currentState.allCompleted) {
-                        finishOnboarding()
+                        emitEffect(ModelDownloadEffect.NavigateToFirstTranslation)
                     }
                 }
             }
@@ -61,7 +62,7 @@ class ModelDownloadViewModel
         override fun onIntent(intent: ModelDownloadIntent) {
             when (intent) {
                 is ModelDownloadIntent.TogglePause -> togglePause(intent.modelId)
-                ModelDownloadIntent.SkipForNow -> viewModelScope.launch { finishOnboarding() }
+                ModelDownloadIntent.SkipForNow -> skip()
             }
         }
 
@@ -72,9 +73,12 @@ class ModelDownloadViewModel
             }
         }
 
-        private suspend fun finishOnboarding() {
-            completeOnboarding()
-            emitEffect(ModelDownloadEffect.NavigateToLibrary)
+        // '나중에 하기'는 모델 없이 온보딩을 마치고 라이브러리로. (완료 표시는 여기서.)
+        private fun skip() {
+            viewModelScope.launch {
+                completeOnboarding()
+                emitEffect(ModelDownloadEffect.NavigateToLibrary)
+            }
         }
 
         override fun reduce(
