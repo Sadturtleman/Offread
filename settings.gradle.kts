@@ -24,4 +24,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "Offread"
 include(":app")
+include(":core:entity")
+include(":core:domain")
+include(":core:ui")
  
