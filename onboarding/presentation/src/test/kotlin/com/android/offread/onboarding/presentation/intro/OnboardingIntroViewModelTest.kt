@@ -1,7 +1,6 @@
 package com.android.offread.onboarding.presentation.intro
 
 import com.android.offread.core.entity.LanguagePair
-import com.android.offread.onboarding.domain.usecase.CompleteOnboardingUseCase
 import com.android.offread.onboarding.domain.usecase.SelectLanguagePairsUseCase
 import com.android.offread.onboarding.presentation.FakeOnboardingRepository
 import com.android.offread.onboarding.presentation.MainDispatcherRule
@@ -18,7 +17,7 @@ class OnboardingIntroViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private fun viewModel(repo: FakeOnboardingRepository = FakeOnboardingRepository()) =
-        OnboardingIntroViewModel(SelectLanguagePairsUseCase(repo), CompleteOnboardingUseCase(repo))
+        OnboardingIntroViewModel(SelectLanguagePairsUseCase(repo))
 
     @Test
     fun `초기 상태는 선택 가능한 첫 언어쌍이 선택되고 제공예정은 비활성`() {
@@ -54,7 +53,7 @@ class OnboardingIntroViewModelTest {
     }
 
     @Test
-    fun `다음을 누르면 언어쌍 저장·온보딩 완료 후 다음 이펙트를 낸다`() =
+    fun `다음을 누르면 언어쌍을 저장하고 다음(모델 다운로드) 이펙트를 낸다`() =
         runTest {
             val repo = FakeOnboardingRepository()
             val vm = viewModel(repo)
@@ -63,6 +62,7 @@ class OnboardingIntroViewModelTest {
 
             assertEquals(OnboardingIntroEffect.NavigateNext, vm.effect.first())
             assertEquals(setOf(LanguagePair.JA_KO), repo.selectedLanguagePairs.first())
-            assertTrue(repo.isOnboardingComplete.first())
+            // 온보딩 완료 표시는 다운로드/스킵 단계에서 하므로 이 시점엔 아직 미완료.
+            assertFalse(repo.isOnboardingComplete.first())
         }
 }

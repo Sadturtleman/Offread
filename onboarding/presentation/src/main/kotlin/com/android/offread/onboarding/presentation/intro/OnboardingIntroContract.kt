@@ -39,7 +39,7 @@ sealed interface OnboardingIntroEvent : ReducerEvent {
 }
 
 sealed interface OnboardingIntroEffect : MviEffect {
-    /** 언어쌍 저장 성공 → 다음 단계(현재는 라이브러리 임시). */
+    /** 언어쌍 저장 성공 → 모델 다운로드(O-03). */
     data object NavigateNext : OnboardingIntroEffect
 
     data class ShowError(

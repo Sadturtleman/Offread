@@ -2,8 +2,10 @@ package com.android.offread.navigation
 
 import com.android.offread.core.domain.navigation.HomePage
 import com.android.offread.home.HomeScreen
+import com.android.offread.onboarding.domain.ModelDownloadPage
 import com.android.offread.onboarding.domain.OnboardingIntroPage
 import com.android.offread.onboarding.domain.SplashPage
+import com.android.offread.onboarding.presentation.download.ModelDownloadScreen
 import com.android.offread.onboarding.presentation.intro.OnboardingIntroScreen
 import com.android.offread.onboarding.presentation.splash.SplashScreen
 
@@ -22,6 +24,10 @@ val appRoutes: List<AppRoute> =
             path = OnboardingIntroPage.PATH,
             isRoot = true,
             render = { OnboardingIntroScreen() },
+        ),
+        AppRoute(
+            path = ModelDownloadPage.PATH,
+            render = { ModelDownloadScreen() },
         ),
         AppRoute(
             path = HomePage.PATH,
