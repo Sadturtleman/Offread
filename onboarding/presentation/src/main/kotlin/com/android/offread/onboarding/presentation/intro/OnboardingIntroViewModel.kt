@@ -3,7 +3,6 @@ package com.android.offread.onboarding.presentation.intro
 import androidx.lifecycle.viewModelScope
 import com.android.offread.core.entity.LanguagePair
 import com.android.offread.core.ui.mvi.MviViewModel
-import com.android.offread.onboarding.domain.usecase.CompleteOnboardingUseCase
 import com.android.offread.onboarding.domain.usecase.SelectLanguagePairsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -11,13 +10,13 @@ import javax.inject.Inject
 
 /**
  * F-002 온보딩 인트로·언어쌍 선택. 선택 가능한 언어쌍 중 첫 항목을 기본 선택한다(디자인 O-02).
+ * 저장 성공 시 모델 다운로드(O-03)로 넘긴다 — 온보딩 완료 표시는 플로우 끝(다운로드/스킵)에서 한다.
  */
 @HiltViewModel
 class OnboardingIntroViewModel
     @Inject
     constructor(
         private val selectLanguagePairs: SelectLanguagePairsUseCase,
-        private val completeOnboarding: CompleteOnboardingUseCase,
     ) : MviViewModel<OnboardingIntroIntent, OnboardingIntroUiState, OnboardingIntroEvent, OnboardingIntroEffect>(
             initialState(),
         ) {
@@ -42,7 +41,6 @@ class OnboardingIntroViewModel
                 dispatch(OnboardingIntroEvent.Submitting(true))
                 selectLanguagePairs(pairs)
                     .onSuccess {
-                        completeOnboarding()
                         emitEffect(OnboardingIntroEffect.NavigateNext)
                     }.onFailure { error ->
                         dispatch(OnboardingIntroEvent.Submitting(false))

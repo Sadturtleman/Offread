@@ -25,10 +25,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.android.offread.core.domain.navigation.HomePage
 import com.android.offread.core.ui.helper.LocalMessageHelper
 import com.android.offread.core.ui.helper.LocalNavigationHelper
 import com.android.offread.core.ui.helper.singleClickable
+import com.android.offread.onboarding.domain.ModelDownloadPage
 
 /**
  * O-02 온보딩 인트로·언어쌍 선택(F-002).
@@ -45,7 +45,7 @@ fun OnboardingIntroScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                OnboardingIntroEffect.NavigateNext -> navigationHelper.navigateTo(HomePage)
+                OnboardingIntroEffect.NavigateNext -> navigationHelper.navigateTo(ModelDownloadPage)
                 is OnboardingIntroEffect.ShowError -> messageHelper.showToast(effect.message)
             }
         }
