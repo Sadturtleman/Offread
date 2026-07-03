@@ -8,10 +8,12 @@ import androidx.room.RoomDatabase
  * 지금은 컬렉션 테이블만. 아이템/용어/캐시 테이블은 관련 기능(가져오기·리더·용어맵)에서 추가한다.
  */
 @Database(
-    entities = [CollectionEntity::class],
-    version = 1,
+    entities = [CollectionEntity::class, ItemEntity::class],
+    version = 2,
     exportSchema = false,
 )
 abstract class OffreadDatabase : RoomDatabase() {
     abstract fun collectionDao(): CollectionDao
+
+    abstract fun itemDao(): ItemDao
 }

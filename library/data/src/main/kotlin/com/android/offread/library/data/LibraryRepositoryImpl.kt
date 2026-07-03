@@ -2,8 +2,10 @@ package com.android.offread.library.data
 
 import com.android.offread.core.database.CollectionDao
 import com.android.offread.core.database.CollectionEntity
+import com.android.offread.core.database.ItemDao
 import com.android.offread.library.domain.LibraryRepository
 import com.android.offread.library.domain.model.Collection
+import com.android.offread.library.domain.model.LibraryItem
 import com.android.offread.library.domain.model.LibrarySort
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -17,6 +19,7 @@ class LibraryRepositoryImpl
     @Inject
     constructor(
         private val collectionDao: CollectionDao,
+        private val itemDao: ItemDao,
     ) : LibraryRepository {
         override fun observeCollections(sort: LibrarySort): Flow<List<Collection>> {
             val source =
@@ -54,5 +57,17 @@ class LibraryRepositoryImpl
 
         override suspend fun deleteCollection(id: String) {
             collectionDao.delete(id)
+        }
+
+        override fun observeItems(collectionId: String?): Flow<List<LibraryItem>> {
+            val source =
+                if (collectionId == null) itemDao.observeAll() else itemDao.observeByCollection(collectionId)
+            return source.map { list -> list.map { it.toDomain() } }
+        }
+
+        override suspend fun addItem(item: LibraryItem): String {
+            val id = item.id.ifBlank { UUID.randomUUID().toString() }
+            itemDao.insert(item.copy(id = id, updatedAt = System.currentTimeMillis()).toEntity())
+            return id
         }
     }

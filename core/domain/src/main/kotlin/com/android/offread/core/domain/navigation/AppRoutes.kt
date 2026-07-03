@@ -17,6 +17,10 @@ object AppRoutes {
     const val FIRST_TRANSLATION = "onboarding/first-translation"
 
     const val HOME = "home" // 진입점(라이브러리 자리 임시)
+
+    // import
+    const val IMPORT_SHEET = "import/sheet"
+    const val IMPORT_WEBNOVEL = "import/webnovel"
 }
 
 /**

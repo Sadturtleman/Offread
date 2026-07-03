@@ -21,8 +21,13 @@ object DatabaseModule {
     ): OffreadDatabase =
         Room
             .databaseBuilder(context, OffreadDatabase::class.java, DB_NAME)
+            // MVP: 미출시 단계라 스키마 변경 시 파괴적 재생성(모델·원문은 DB 밖이라 안전).
+            .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
 
     @Provides
     fun provideCollectionDao(database: OffreadDatabase): CollectionDao = database.collectionDao()
+
+    @Provides
+    fun provideItemDao(database: OffreadDatabase): ItemDao = database.itemDao()
 }

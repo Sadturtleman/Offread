@@ -1,6 +1,10 @@
 package com.android.offread.navigation
 
 import com.android.offread.core.domain.navigation.HomePage
+import com.android.offread.importer.domain.ImportSheetPage
+import com.android.offread.importer.domain.WebNovelImportPage
+import com.android.offread.importer.presentation.sheet.ImportSheetScreen
+import com.android.offread.importer.presentation.webnovel.WebNovelImportScreen
 import com.android.offread.library.presentation.LibraryScreen
 import com.android.offread.onboarding.domain.FirstTranslationPage
 import com.android.offread.onboarding.domain.ModelDownloadPage
@@ -39,6 +43,14 @@ val appRoutes: List<AppRoute> =
             path = HomePage.PATH,
             isRoot = true,
             render = { LibraryScreen() },
+        ),
+        AppRoute(
+            path = ImportSheetPage.PATH,
+            render = { ImportSheetScreen() },
+        ),
+        AppRoute(
+            path = WebNovelImportPage.PATH,
+            render = { WebNovelImportScreen() },
         ),
     )
 
