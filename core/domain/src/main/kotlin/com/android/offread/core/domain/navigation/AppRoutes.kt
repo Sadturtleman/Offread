@@ -10,7 +10,11 @@ package com.android.offread.core.domain.navigation
  * 아래는 스타터 경로 하나만 둔다. feature 를 추가할 때마다 상수를 늘려간다.
  */
 object AppRoutes {
-    const val HOME = "home" // 진입점
+    // onboarding
+    const val SPLASH = "splash"
+    const val ONBOARDING_INTRO = "onboarding/intro"
+
+    const val HOME = "home" // 진입점(라이브러리 자리 임시)
 }
 
 /**

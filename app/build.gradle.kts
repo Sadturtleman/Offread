@@ -49,6 +49,10 @@ dependencies {
     implementation(project(":core:entity"))
     implementation(project(":core:domain"))
     implementation(project(":core:ui"))
+    implementation(project(":core:datastore"))
+    implementation(project(":onboarding:domain"))
+    implementation(project(":onboarding:data"))
+    implementation(project(":onboarding:presentation"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
