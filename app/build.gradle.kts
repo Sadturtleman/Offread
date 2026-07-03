@@ -57,6 +57,9 @@ dependencies {
     implementation(project(":library:domain"))
     implementation(project(":library:data"))
     implementation(project(":library:presentation"))
+    implementation(project(":importer:domain"))
+    implementation(project(":importer:data"))
+    implementation(project(":importer:presentation"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)

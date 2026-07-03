@@ -1,6 +1,7 @@
 package com.android.offread.library.domain
 
 import com.android.offread.library.domain.model.Collection
+import com.android.offread.library.domain.model.LibraryItem
 import com.android.offread.library.domain.model.LibrarySort
 import kotlinx.coroutines.flow.Flow
 
@@ -23,4 +24,10 @@ interface LibraryRepository {
 
     /** 삭제(즉시, 휴지통 없음). 하위 컬렉션·아이템·용어·캐시가 연쇄 삭제된다(P-04). */
     suspend fun deleteCollection(id: String)
+
+    /** 전체 아이템(최근 갱신 순). collectionId 가 있으면 해당 컬렉션만. */
+    fun observeItems(collectionId: String? = null): Flow<List<LibraryItem>>
+
+    /** 아이템 추가. 생성된 id 반환. */
+    suspend fun addItem(item: LibraryItem): String
 }

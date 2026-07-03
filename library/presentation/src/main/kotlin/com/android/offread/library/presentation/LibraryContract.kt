@@ -5,6 +5,7 @@ import com.android.offread.core.ui.mvi.MviIntent
 import com.android.offread.core.ui.mvi.ReducerEvent
 import com.android.offread.core.ui.mvi.UiState
 import com.android.offread.library.domain.model.Collection
+import com.android.offread.library.domain.model.LibraryItem
 import com.android.offread.library.domain.model.LibrarySort
 
 /** 컬렉션 CRUD 다이얼로그 상태. */
@@ -22,11 +23,12 @@ sealed interface CollectionDialog {
 
 data class LibraryUiState(
     val collections: List<Collection> = emptyList(),
+    val items: List<LibraryItem> = emptyList(),
     val sort: LibrarySort = LibrarySort.RECENT,
     val dialog: CollectionDialog? = null,
     val loading: Boolean = true,
 ) : UiState {
-    val isEmpty: Boolean get() = !loading && collections.isEmpty()
+    val isEmpty: Boolean get() = !loading && collections.isEmpty() && items.isEmpty()
 }
 
 sealed interface LibraryIntent : MviIntent {
@@ -65,6 +67,10 @@ sealed interface LibraryIntent : MviIntent {
 sealed interface LibraryEvent : ReducerEvent {
     data class CollectionsChanged(
         val collections: List<Collection>,
+    ) : LibraryEvent
+
+    data class ItemsChanged(
+        val items: List<LibraryItem>,
     ) : LibraryEvent
 
     data class SortChanged(

@@ -35,4 +35,7 @@ include(":onboarding:presentation")
 include(":library:domain")
 include(":library:data")
 include(":library:presentation")
+include(":importer:domain")
+include(":importer:data")
+include(":importer:presentation")
  

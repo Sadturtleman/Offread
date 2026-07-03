@@ -1,6 +1,7 @@
 package com.android.offread.library.domain
 
 import com.android.offread.library.domain.model.Collection
+import com.android.offread.library.domain.model.LibraryItem
 import com.android.offread.library.domain.model.LibrarySort
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,5 +43,18 @@ class FakeLibraryRepository : LibraryRepository {
         collections.value = collections.value.filterNot { it.id == id || it.parentId == id }
     }
 
+    private val items = MutableStateFlow<List<LibraryItem>>(emptyList())
+
+    override fun observeItems(collectionId: String?): Flow<List<LibraryItem>> =
+        items.map { list -> if (collectionId == null) list else list.filter { it.collectionId == collectionId } }
+
+    override suspend fun addItem(item: LibraryItem): String {
+        val id = "i${nextId++}"
+        items.value = items.value + item.copy(id = id)
+        return id
+    }
+
     fun current(): List<Collection> = collections.value
+
+    fun currentItems(): List<LibraryItem> = items.value
 }

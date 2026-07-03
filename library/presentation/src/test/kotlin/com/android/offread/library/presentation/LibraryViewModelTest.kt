@@ -4,6 +4,7 @@ import com.android.offread.library.domain.model.LibrarySort
 import com.android.offread.library.domain.usecase.CreateCollectionUseCase
 import com.android.offread.library.domain.usecase.DeleteCollectionUseCase
 import com.android.offread.library.domain.usecase.ObserveCollectionsUseCase
+import com.android.offread.library.domain.usecase.ObserveItemsUseCase
 import com.android.offread.library.domain.usecase.RenameCollectionUseCase
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -19,6 +20,7 @@ class LibraryViewModelTest {
     private fun viewModel(repo: FakeLibraryRepository = FakeLibraryRepository()) =
         LibraryViewModel(
             ObserveCollectionsUseCase(repo),
+            ObserveItemsUseCase(repo),
             CreateCollectionUseCase(repo),
             RenameCollectionUseCase(repo),
             DeleteCollectionUseCase(repo),

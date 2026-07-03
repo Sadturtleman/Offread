@@ -6,6 +6,7 @@ import com.android.offread.library.domain.model.LibrarySort
 import com.android.offread.library.domain.usecase.CreateCollectionUseCase
 import com.android.offread.library.domain.usecase.DeleteCollectionUseCase
 import com.android.offread.library.domain.usecase.ObserveCollectionsUseCase
+import com.android.offread.library.domain.usecase.ObserveItemsUseCase
 import com.android.offread.library.domain.usecase.RenameCollectionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -22,6 +23,7 @@ class LibraryViewModel
     @Inject
     constructor(
         private val observeCollections: ObserveCollectionsUseCase,
+        private val observeItems: ObserveItemsUseCase,
         private val createCollection: CreateCollectionUseCase,
         private val renameCollection: RenameCollectionUseCase,
         private val deleteCollection: DeleteCollectionUseCase,
@@ -31,6 +33,13 @@ class LibraryViewModel
 
         init {
             observeSorted()
+            observeItems()
+        }
+
+        private fun observeItems() {
+            viewModelScope.launch {
+                observeItems.invoke().collect { items -> dispatch(LibraryEvent.ItemsChanged(items)) }
+            }
         }
 
         @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -95,6 +104,7 @@ class LibraryViewModel
         ): LibraryUiState =
             when (event) {
                 is LibraryEvent.CollectionsChanged -> state.copy(collections = event.collections, loading = false)
+                is LibraryEvent.ItemsChanged -> state.copy(items = event.items, loading = false)
                 is LibraryEvent.SortChanged -> state.copy(sort = event.sort)
                 is LibraryEvent.DialogChanged -> state.copy(dialog = event.dialog)
             }

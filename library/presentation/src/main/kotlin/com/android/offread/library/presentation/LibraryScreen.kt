@@ -21,8 +21,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.android.offread.core.domain.navigation.AppRoutes
+import com.android.offread.core.domain.navigation.NavRoute
+import com.android.offread.core.entity.TranslationStatus
 import com.android.offread.core.ui.helper.LocalMessageHelper
+import com.android.offread.core.ui.helper.LocalNavigationHelper
 import com.android.offread.library.domain.model.Collection
+import com.android.offread.library.domain.model.LibraryItem
 import com.android.offread.library.domain.model.LibrarySort
 
 /**
@@ -35,12 +40,13 @@ fun LibraryScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val messageHelper = LocalMessageHelper.current
+    val navigationHelper = LocalNavigationHelper.current
 
     androidx.compose.runtime.LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
                 is LibraryEffect.ShowError -> messageHelper.showToast(effect.message)
-                LibraryEffect.NavigateToImport -> messageHelper.showToast("가져오기는 곧 제공돼요.")
+                LibraryEffect.NavigateToImport -> navigationHelper.navigateByRoute(NavRoute(AppRoutes.IMPORT_SHEET))
             }
         }
     }
@@ -72,12 +78,15 @@ fun LibraryScreen(
                     modifier = Modifier.weight(1f).padding(top = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    items(state.collections, key = { it.id }) { collection ->
+                    items(state.collections, key = { "c-${it.id}" }) { collection ->
                         CollectionRow(
                             collection = collection,
                             onRename = { viewModel.onIntent(LibraryIntent.RenameCollectionClicked(collection)) },
                             onDelete = { viewModel.onIntent(LibraryIntent.DeleteCollectionClicked(collection)) },
                         )
+                    }
+                    items(state.items, key = { "i-${it.id}" }) { item ->
+                        ItemRow(item = item)
                     }
                 }
             }
@@ -133,6 +142,42 @@ private fun CollectionRow(
             }
         }
     }
+}
+
+@Composable
+private fun ItemRow(
+    item: LibraryItem,
+    modifier: Modifier = Modifier,
+) {
+    androidx.compose.material3.ElevatedCard(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp), modifier = Modifier.weight(1f)) {
+                Text(text = item.title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = "웹소설 · ${item.author} · 전 ${item.totalChapters}화",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            TranslationBadge(item.translationStatus)
+        }
+    }
+}
+
+@Composable
+private fun TranslationBadge(status: TranslationStatus) {
+    val label =
+        when (status) {
+            TranslationStatus.UNTRANSLATED -> "미번역"
+            TranslationStatus.TRANSLATING -> "번역 중"
+            TranslationStatus.CACHED -> "캐시됨"
+            TranslationStatus.CLOUD_FALLBACK -> "폴백"
+        }
+    androidx.compose.material3.AssistChip(onClick = {}, enabled = false, label = { Text(label) })
 }
 
 @Composable
