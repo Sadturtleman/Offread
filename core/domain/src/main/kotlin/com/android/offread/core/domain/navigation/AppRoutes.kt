@@ -21,6 +21,9 @@ object AppRoutes {
     // import
     const val IMPORT_SHEET = "import/sheet"
     const val IMPORT_WEBNOVEL = "import/webnovel"
+
+    // library
+    const val WEBNOVEL_DETAIL = "library/webnovel"
 }
 
 /**

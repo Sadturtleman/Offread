@@ -26,6 +26,8 @@ import com.android.offread.core.domain.navigation.NavRoute
 import com.android.offread.core.entity.TranslationStatus
 import com.android.offread.core.ui.helper.LocalMessageHelper
 import com.android.offread.core.ui.helper.LocalNavigationHelper
+import com.android.offread.core.ui.helper.singleClickable
+import com.android.offread.library.domain.WebNovelDetailPage
 import com.android.offread.library.domain.model.Collection
 import com.android.offread.library.domain.model.LibraryItem
 import com.android.offread.library.domain.model.LibrarySort
@@ -86,7 +88,10 @@ fun LibraryScreen(
                         )
                     }
                     items(state.items, key = { "i-${it.id}" }) { item ->
-                        ItemRow(item = item)
+                        ItemRow(
+                            item = item,
+                            onClick = { navigationHelper.navigateTo(WebNovelDetailPage(item.id)) },
+                        )
                     }
                 }
             }
@@ -147,11 +152,12 @@ private fun CollectionRow(
 @Composable
 private fun ItemRow(
     item: LibraryItem,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     androidx.compose.material3.ElevatedCard(modifier = modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier.fillMaxWidth().singleClickable(onClick = onClick).padding(16.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {

@@ -1,5 +1,6 @@
 package com.android.offread.library.domain
 
+import com.android.offread.core.entity.TranslationStatus
 import com.android.offread.library.domain.model.Collection
 import com.android.offread.library.domain.model.LibraryItem
 import com.android.offread.library.domain.model.LibrarySort
@@ -28,6 +29,15 @@ interface LibraryRepository {
     /** 전체 아이템(최근 갱신 순). collectionId 가 있으면 해당 컬렉션만. */
     fun observeItems(collectionId: String? = null): Flow<List<LibraryItem>>
 
+    /** 단일 아이템 구독(없으면 null). */
+    fun observeItem(id: String): Flow<LibraryItem?>
+
     /** 아이템 추가. 생성된 id 반환. */
     suspend fun addItem(item: LibraryItem): String
+
+    /** 아이템 번역 상태 갱신(F-019 배지 전이). */
+    suspend fun updateItemTranslationStatus(
+        id: String,
+        status: TranslationStatus,
+    )
 }

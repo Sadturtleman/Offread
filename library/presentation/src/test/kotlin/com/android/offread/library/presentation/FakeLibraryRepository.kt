@@ -1,5 +1,6 @@
 package com.android.offread.library.presentation
 
+import com.android.offread.core.entity.TranslationStatus
 import com.android.offread.library.domain.LibraryRepository
 import com.android.offread.library.domain.model.Collection
 import com.android.offread.library.domain.model.LibraryItem
@@ -48,9 +49,22 @@ class FakeLibraryRepository : LibraryRepository {
     override fun observeItems(collectionId: String?): Flow<List<LibraryItem>> =
         items.map { list -> if (collectionId == null) list else list.filter { it.collectionId == collectionId } }
 
+    override fun observeItem(id: String): Flow<LibraryItem?> = items.map { list -> list.firstOrNull { it.id == id } }
+
     override suspend fun addItem(item: LibraryItem): String {
         val id = "i${nextId++}"
         items.value = items.value + item.copy(id = id)
         return id
+    }
+
+    override suspend fun updateItemTranslationStatus(
+        id: String,
+        status: TranslationStatus,
+    ) {
+        items.value = items.value.map { if (it.id == id) it.copy(translationStatus = status) else it }
+    }
+
+    fun seedItem(item: LibraryItem) {
+        items.value = items.value + item
     }
 }
