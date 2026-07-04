@@ -1,6 +1,7 @@
 package com.android.offread.importer.presentation
 
 import com.android.offread.core.entity.SerialStatus
+import com.android.offread.core.entity.TranslationStatus
 import com.android.offread.importer.domain.WebNovelImporter
 import com.android.offread.importer.domain.model.WebNovelMetadata
 import com.android.offread.library.domain.LibraryRepository
@@ -46,10 +47,19 @@ class FakeLibraryRepository : LibraryRepository {
     override fun observeItems(collectionId: String?): Flow<List<LibraryItem>> =
         items.map { list -> if (collectionId == null) list else list.filter { it.collectionId == collectionId } }
 
+    override fun observeItem(id: String): Flow<LibraryItem?> = items.map { list -> list.firstOrNull { it.id == id } }
+
     override suspend fun addItem(item: LibraryItem): String {
         val id = "i${next++}"
         items.value = items.value + item.copy(id = id)
         return id
+    }
+
+    override suspend fun updateItemTranslationStatus(
+        id: String,
+        status: TranslationStatus,
+    ) {
+        items.value = items.value.map { if (it.id == id) it.copy(translationStatus = status) else it }
     }
 
     fun seedCollection(name: String): String {

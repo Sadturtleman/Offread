@@ -3,6 +3,7 @@ package com.android.offread.library.data
 import com.android.offread.core.database.CollectionDao
 import com.android.offread.core.database.CollectionEntity
 import com.android.offread.core.database.ItemDao
+import com.android.offread.core.entity.TranslationStatus
 import com.android.offread.library.domain.LibraryRepository
 import com.android.offread.library.domain.model.Collection
 import com.android.offread.library.domain.model.LibraryItem
@@ -65,9 +66,18 @@ class LibraryRepositoryImpl
             return source.map { list -> list.map { it.toDomain() } }
         }
 
+        override fun observeItem(id: String): Flow<LibraryItem?> = itemDao.observeById(id).map { it?.toDomain() }
+
         override suspend fun addItem(item: LibraryItem): String {
             val id = item.id.ifBlank { UUID.randomUUID().toString() }
             itemDao.insert(item.copy(id = id, updatedAt = System.currentTimeMillis()).toEntity())
             return id
+        }
+
+        override suspend fun updateItemTranslationStatus(
+            id: String,
+            status: TranslationStatus,
+        ) {
+            itemDao.updateTranslationStatus(id, status.name, System.currentTimeMillis())
         }
     }
