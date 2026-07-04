@@ -69,7 +69,7 @@ class WebNovelDetailViewModelTest {
     }
 
     @Test
-    fun `이어읽기는 안내 메시지를 낸다`() =
+    fun `이어읽기는 리더 열기 이펙트를 낸다`() =
         runTest {
             val repo = FakeLibraryRepository().apply { seedItem(item()) }
             val vm = viewModel(repo)
@@ -78,7 +78,10 @@ class WebNovelDetailViewModelTest {
             vm.onIntent(WebNovelDetailIntent.ContinueReading)
 
             val effect = vm.effect.first()
-            assertTrue(effect is WebNovelDetailEffect.ShowMessage)
-            assertEquals("리더는 곧 제공돼요.", (effect as WebNovelDetailEffect.ShowMessage).message)
+            assertTrue(effect is WebNovelDetailEffect.OpenReader)
+            effect as WebNovelDetailEffect.OpenReader
+            assertEquals("i0", effect.itemId)
+            // lastReadChapter 0 → 1화로 시작.
+            assertEquals(1, effect.chapterIndex)
         }
 }

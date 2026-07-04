@@ -33,4 +33,5 @@ data class ItemEntity(
     val serialStatus: String,
     val translationStatus: String,
     val updatedAt: Long,
+    val lastReadChapter: Int,
 )

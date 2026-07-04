@@ -19,6 +19,7 @@ internal fun ItemEntity.toDomain(): LibraryItem =
         serialStatus = SerialStatus.valueOf(serialStatus),
         translationStatus = TranslationStatus.valueOf(translationStatus),
         updatedAt = updatedAt,
+        lastReadChapter = lastReadChapter,
     )
 
 internal fun LibraryItem.toEntity(): ItemEntity =
@@ -34,4 +35,5 @@ internal fun LibraryItem.toEntity(): ItemEntity =
         serialStatus = serialStatus.name,
         translationStatus = translationStatus.name,
         updatedAt = updatedAt,
+        lastReadChapter = lastReadChapter,
     )

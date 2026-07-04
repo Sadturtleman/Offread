@@ -9,6 +9,7 @@ import com.android.offread.core.entity.TranslationStatus
  *
  * @property collectionId 소속 컬렉션
  * @property totalChapters 웹소설 화수(논문은 0)
+ * @property lastReadChapter 마지막으로 읽던 화(1-based, 0=미시작). 이어읽기 대상.
  */
 data class LibraryItem(
     val id: String,
@@ -22,4 +23,5 @@ data class LibraryItem(
     val serialStatus: SerialStatus,
     val translationStatus: TranslationStatus,
     val updatedAt: Long,
+    val lastReadChapter: Int = 0,
 )

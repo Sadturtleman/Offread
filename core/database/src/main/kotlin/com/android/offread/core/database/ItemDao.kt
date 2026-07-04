@@ -26,6 +26,13 @@ interface ItemDao {
         updatedAt: Long,
     )
 
+    @Query("UPDATE items SET lastReadChapter = :chapter, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun updateReadingProgress(
+        id: String,
+        chapter: Int,
+        updatedAt: Long,
+    )
+
     @Query("DELETE FROM items WHERE id = :id")
     suspend fun delete(id: String)
 }

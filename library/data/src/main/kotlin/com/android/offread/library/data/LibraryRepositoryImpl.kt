@@ -80,4 +80,11 @@ class LibraryRepositoryImpl
         ) {
             itemDao.updateTranslationStatus(id, status.name, System.currentTimeMillis())
         }
+
+        override suspend fun updateReadingProgress(
+            id: String,
+            lastReadChapter: Int,
+        ) {
+            itemDao.updateReadingProgress(id, lastReadChapter, System.currentTimeMillis())
+        }
     }

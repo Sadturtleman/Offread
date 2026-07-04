@@ -40,4 +40,10 @@ interface LibraryRepository {
         id: String,
         status: TranslationStatus,
     )
+
+    /** 읽던 위치 저장(F-015). */
+    suspend fun updateReadingProgress(
+        id: String,
+        lastReadChapter: Int,
+    )
 }
