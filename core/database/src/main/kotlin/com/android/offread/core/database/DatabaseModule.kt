@@ -30,4 +30,7 @@ object DatabaseModule {
 
     @Provides
     fun provideItemDao(database: OffreadDatabase): ItemDao = database.itemDao()
+
+    @Provides
+    fun provideTermDao(database: OffreadDatabase): TermDao = database.termDao()
 }
