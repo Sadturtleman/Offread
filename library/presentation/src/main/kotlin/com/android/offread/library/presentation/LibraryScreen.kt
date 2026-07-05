@@ -85,6 +85,11 @@ fun LibraryScreen(
                             collection = collection,
                             onRename = { viewModel.onIntent(LibraryIntent.RenameCollectionClicked(collection)) },
                             onDelete = { viewModel.onIntent(LibraryIntent.DeleteCollectionClicked(collection)) },
+                            onTermMap = {
+                                navigationHelper.navigateByRoute(
+                                    NavRoute(AppRoutes.TERM_MAP, mapOf(AppRoutes.ARG_COLLECTION_ID to collection.id)),
+                                )
+                            },
                         )
                     }
                     items(state.items, key = { "i-${it.id}" }) { item ->
@@ -131,6 +136,7 @@ private fun CollectionRow(
     collection: Collection,
     onRename: () -> Unit,
     onDelete: () -> Unit,
+    onTermMap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     androidx.compose.material3.ElevatedCard(modifier = modifier.fillMaxWidth()) {
@@ -142,6 +148,7 @@ private fun CollectionRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextButton(onClick = onTermMap) { Text("용어맵") }
                 TextButton(onClick = onRename) { Text("이름 변경") }
                 TextButton(onClick = onDelete) { Text("삭제") }
             }

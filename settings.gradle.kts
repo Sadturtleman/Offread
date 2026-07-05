@@ -41,4 +41,7 @@ include(":importer:presentation")
 include(":reader:domain")
 include(":reader:data")
 include(":reader:presentation")
+include(":terms:domain")
+include(":terms:data")
+include(":terms:presentation")
  

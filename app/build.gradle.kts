@@ -63,6 +63,9 @@ dependencies {
     implementation(project(":reader:domain"))
     implementation(project(":reader:data"))
     implementation(project(":reader:presentation"))
+    implementation(project(":terms:domain"))
+    implementation(project(":terms:data"))
+    implementation(project(":terms:presentation"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)

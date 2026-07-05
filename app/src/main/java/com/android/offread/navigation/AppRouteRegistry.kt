@@ -18,6 +18,8 @@ import com.android.offread.onboarding.presentation.intro.OnboardingIntroScreen
 import com.android.offread.onboarding.presentation.splash.SplashScreen
 import com.android.offread.reader.domain.ReaderPage
 import com.android.offread.reader.presentation.ReaderScreen
+import com.android.offread.terms.domain.TermMapPage
+import com.android.offread.terms.presentation.TermMapScreen
 
 /**
  * 앱의 모든 페이지 메타데이터 + 렌더러 모음.
@@ -68,6 +70,10 @@ val appRoutes: List<AppRoute> =
                     chapterIndex = args[ReaderPage.ARG_CHAPTER]?.toIntOrNull() ?: 1,
                 )
             },
+        ),
+        AppRoute(
+            path = TermMapPage.PATH,
+            render = { args -> TermMapScreen(collectionId = args[TermMapPage.ARG_COLLECTION_ID].orEmpty()) },
         ),
     )
 

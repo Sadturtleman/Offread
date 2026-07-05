@@ -28,9 +28,13 @@ object AppRoutes {
     // reader
     const val READER = "reader/webnovel"
 
+    // terms
+    const val TERM_MAP = "terms/map"
+
     // 공용 인자 키
     const val ARG_ITEM_ID = "itemId"
     const val ARG_CHAPTER = "chapter"
+    const val ARG_COLLECTION_ID = "collectionId"
 }
 
 /**
