@@ -9,7 +9,7 @@ import androidx.room.RoomDatabase
  */
 @Database(
     entities = [CollectionEntity::class, ItemEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false,
 )
 abstract class OffreadDatabase : RoomDatabase() {

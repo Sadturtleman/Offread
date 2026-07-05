@@ -25,9 +25,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.android.offread.core.domain.navigation.AppRoutes
+import com.android.offread.core.domain.navigation.NavRoute
 import com.android.offread.core.entity.SerialStatus
 import com.android.offread.core.entity.TranslationStatus
 import com.android.offread.core.ui.helper.LocalMessageHelper
+import com.android.offread.core.ui.helper.LocalNavigationHelper
 import com.android.offread.library.domain.model.Chapter
 import com.android.offread.library.domain.model.LibraryItem
 
@@ -42,12 +45,23 @@ fun WebNovelDetailScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val messageHelper = LocalMessageHelper.current
+    val navigationHelper = LocalNavigationHelper.current
 
     LaunchedEffect(itemId) { viewModel.start(itemId) }
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
                 is WebNovelDetailEffect.ShowMessage -> messageHelper.showToast(effect.message)
+                is WebNovelDetailEffect.OpenReader ->
+                    navigationHelper.navigateByRoute(
+                        NavRoute(
+                            AppRoutes.READER,
+                            mapOf(
+                                AppRoutes.ARG_ITEM_ID to effect.itemId,
+                                AppRoutes.ARG_CHAPTER to effect.chapterIndex.toString(),
+                            ),
+                        ),
+                    )
             }
         }
     }

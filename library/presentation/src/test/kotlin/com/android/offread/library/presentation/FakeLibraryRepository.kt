@@ -64,6 +64,13 @@ class FakeLibraryRepository : LibraryRepository {
         items.value = items.value.map { if (it.id == id) it.copy(translationStatus = status) else it }
     }
 
+    override suspend fun updateReadingProgress(
+        id: String,
+        lastReadChapter: Int,
+    ) {
+        items.value = items.value.map { if (it.id == id) it.copy(lastReadChapter = lastReadChapter) else it }
+    }
+
     fun seedItem(item: LibraryItem) {
         items.value = items.value + item
     }

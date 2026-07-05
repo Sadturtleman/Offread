@@ -40,8 +40,10 @@ class WebNovelDetailViewModel
         override fun onIntent(intent: WebNovelDetailIntent) {
             when (intent) {
                 WebNovelDetailIntent.PrepareOffline -> prepare()
-                WebNovelDetailIntent.ContinueReading ->
-                    emitEffect(WebNovelDetailEffect.ShowMessage("리더는 곧 제공돼요."))
+                WebNovelDetailIntent.ContinueReading -> {
+                    val item = currentState.item ?: return
+                    emitEffect(WebNovelDetailEffect.OpenReader(item.id, item.lastReadChapter.coerceAtLeast(1)))
+                }
                 WebNovelDetailIntent.CheckForNewChapters ->
                     emitEffect(WebNovelDetailEffect.ShowMessage("새 화 확인은 곧 제공돼요."))
             }

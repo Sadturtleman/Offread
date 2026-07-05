@@ -62,6 +62,13 @@ class FakeLibraryRepository : LibraryRepository {
         items.value = items.value.map { if (it.id == id) it.copy(translationStatus = status) else it }
     }
 
+    override suspend fun updateReadingProgress(
+        id: String,
+        lastReadChapter: Int,
+    ) {
+        items.value = items.value.map { if (it.id == id) it.copy(lastReadChapter = lastReadChapter) else it }
+    }
+
     fun seedCollection(name: String): String {
         val id = "c${next++}"
         collections.value = collections.value + Collection(id, name, null, 0, 0, next.toLong())

@@ -36,4 +36,10 @@ sealed interface WebNovelDetailEffect : MviEffect {
     data class ShowMessage(
         val message: String,
     ) : WebNovelDetailEffect
+
+    /** 이어읽기 → 리더(R-01). */
+    data class OpenReader(
+        val itemId: String,
+        val chapterIndex: Int,
+    ) : WebNovelDetailEffect
 }

@@ -16,6 +16,8 @@ import com.android.offread.onboarding.presentation.download.ModelDownloadScreen
 import com.android.offread.onboarding.presentation.firsttranslation.FirstTranslationScreen
 import com.android.offread.onboarding.presentation.intro.OnboardingIntroScreen
 import com.android.offread.onboarding.presentation.splash.SplashScreen
+import com.android.offread.reader.domain.ReaderPage
+import com.android.offread.reader.presentation.ReaderScreen
 
 /**
  * 앱의 모든 페이지 메타데이터 + 렌더러 모음.
@@ -57,6 +59,15 @@ val appRoutes: List<AppRoute> =
         AppRoute(
             path = WebNovelDetailPage.PATH,
             render = { args -> WebNovelDetailScreen(itemId = args[WebNovelDetailPage.ARG_ITEM_ID].orEmpty()) },
+        ),
+        AppRoute(
+            path = ReaderPage.PATH,
+            render = { args ->
+                ReaderScreen(
+                    itemId = args[ReaderPage.ARG_ITEM_ID].orEmpty(),
+                    chapterIndex = args[ReaderPage.ARG_CHAPTER]?.toIntOrNull() ?: 1,
+                )
+            },
         ),
     )
 
