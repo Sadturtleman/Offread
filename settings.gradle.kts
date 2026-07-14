@@ -44,4 +44,6 @@ include(":reader:presentation")
 include(":terms:domain")
 include(":terms:data")
 include(":terms:presentation")
- 
+include(":settings:domain")
+include(":settings:data")
+include(":settings:presentation")
