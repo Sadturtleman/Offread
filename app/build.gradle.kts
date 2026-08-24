@@ -63,6 +63,8 @@ dependencies {
     implementation(project(":reader:domain"))
     implementation(project(":reader:data"))
     implementation(project(":reader:presentation"))
+    implementation(project(":translate:domain"))
+    implementation(project(":translate:data"))
     implementation(project(":terms:domain"))
     implementation(project(":terms:data"))
     implementation(project(":terms:presentation"))

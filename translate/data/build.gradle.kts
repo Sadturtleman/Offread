@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.android.offread.library.data"
+    namespace = "com.android.offread.translate.data"
     compileSdk = 37
 
     defaultConfig {
@@ -27,12 +27,7 @@ kotlin {
 }
 
 dependencies {
-    implementation(project(":library:domain"))
-    // F-013: 연재 화수 조회는 가져오기(F-012)의 수집 포트를 재사용한다.
-    implementation(project(":importer:domain"))
-    // F-021: 컬렉션 이동 시 캐시 무효화를 세그먼트 캐시에 위임한다.
     implementation(project(":translate:domain"))
-    implementation(project(":core:entity"))
     implementation(project(":core:database"))
 
     implementation(libs.kotlinx.coroutines.core)
