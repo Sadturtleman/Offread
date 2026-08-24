@@ -31,6 +31,11 @@ object AppRoutes {
     // terms
     const val TERM_MAP = "terms/map"
 
+    // settings
+    const val SETTINGS_HOME = "settings"
+    const val SETTINGS_DISPLAY = "settings/display"
+    const val SETTINGS_INFO = "settings/info"
+
     // 공용 인자 키
     const val ARG_ITEM_ID = "itemId"
     const val ARG_CHAPTER = "chapter"

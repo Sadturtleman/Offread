@@ -55,11 +55,22 @@ fun LibraryScreen(
 
     Box(modifier = modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize().padding(24.dp)) {
-            Text(
-                text = "라이브러리",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = "라이브러리",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                )
+                TextButton(
+                    onClick = { navigationHelper.navigateByRoute(NavRoute(AppRoutes.SETTINGS_HOME)) },
+                ) {
+                    Text(text = "설정", style = MaterialTheme.typography.labelLarge)
+                }
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp),

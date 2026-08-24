@@ -66,6 +66,9 @@ dependencies {
     implementation(project(":terms:domain"))
     implementation(project(":terms:data"))
     implementation(project(":terms:presentation"))
+    implementation(project(":settings:domain"))
+    implementation(project(":settings:data"))
+    implementation(project(":settings:presentation"))
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)

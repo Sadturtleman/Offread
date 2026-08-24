@@ -18,6 +18,12 @@ import com.android.offread.onboarding.presentation.intro.OnboardingIntroScreen
 import com.android.offread.onboarding.presentation.splash.SplashScreen
 import com.android.offread.reader.domain.ReaderPage
 import com.android.offread.reader.presentation.ReaderScreen
+import com.android.offread.settings.domain.DisplaySettingsPage
+import com.android.offread.settings.domain.InfoPage
+import com.android.offread.settings.domain.SettingsHomePage
+import com.android.offread.settings.presentation.display.DisplaySettingsScreen
+import com.android.offread.settings.presentation.home.SettingsHomeScreen
+import com.android.offread.settings.presentation.info.InfoScreen
 import com.android.offread.terms.domain.TermMapPage
 import com.android.offread.terms.presentation.TermMapScreen
 
@@ -74,6 +80,18 @@ val appRoutes: List<AppRoute> =
         AppRoute(
             path = TermMapPage.PATH,
             render = { args -> TermMapScreen(collectionId = args[TermMapPage.ARG_COLLECTION_ID].orEmpty()) },
+        ),
+        AppRoute(
+            path = SettingsHomePage.PATH,
+            render = { SettingsHomeScreen() },
+        ),
+        AppRoute(
+            path = DisplaySettingsPage.PATH,
+            render = { DisplaySettingsScreen() },
+        ),
+        AppRoute(
+            path = InfoPage.PATH,
+            render = { InfoScreen() },
         ),
     )
 
