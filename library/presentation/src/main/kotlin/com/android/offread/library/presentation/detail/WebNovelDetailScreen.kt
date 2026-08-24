@@ -91,11 +91,16 @@ fun WebNovelDetailScreen(
                 ) {
                     Text("이어읽기")
                 }
-                OutlinedButton(
-                    onClick = { viewModel.onIntent(WebNovelDetailIntent.PrepareOffline) },
-                    enabled = !state.preparing,
-                ) {
-                    Text(if (state.preparing) "준비 중…" else "↓ 오프라인 준비")
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(
+                        onClick = { viewModel.onIntent(WebNovelDetailIntent.PrepareOffline) },
+                        enabled = !state.preparing,
+                    ) {
+                        Text(if (state.preparing) "준비 중…" else "↓ 오프라인 준비")
+                    }
+                    OutlinedButton(onClick = { viewModel.onIntent(WebNovelDetailIntent.MoveClicked) }) {
+                        Text("컬렉션 이동")
+                    }
                 }
 
                 Row(
@@ -120,6 +125,16 @@ fun WebNovelDetailScreen(
             HorizontalDivider()
         }
     }
+
+    MoveItemDialog(
+        visible = state.moveDialogVisible,
+        currentCollectionId = item.collectionId,
+        collections = state.collections,
+        onDismiss = { viewModel.onIntent(WebNovelDetailIntent.DismissMoveDialog) },
+        onSubmit = { targetId, strategy ->
+            viewModel.onIntent(WebNovelDetailIntent.SubmitMove(targetId, strategy))
+        },
+    )
 }
 
 private fun metaLine(item: LibraryItem): String {

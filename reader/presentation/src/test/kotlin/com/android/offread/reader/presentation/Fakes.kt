@@ -7,6 +7,7 @@ import com.android.offread.library.domain.LibraryRepository
 import com.android.offread.library.domain.model.Collection
 import com.android.offread.library.domain.model.LibraryItem
 import com.android.offread.library.domain.model.LibrarySort
+import com.android.offread.library.domain.model.TermMapMoveStrategy
 import com.android.offread.reader.domain.ChapterContentRepository
 import com.android.offread.reader.domain.model.ChapterContent
 import com.android.offread.reader.domain.model.ReaderSegment
@@ -61,6 +62,12 @@ class FakeLibraryRepository(
     override fun observeItem(id: String): Flow<LibraryItem?> = items.map { list -> list.firstOrNull { it.id == id } }
 
     override suspend fun addItem(item: LibraryItem): String = item.id
+
+    override suspend fun moveItem(
+        id: String,
+        targetCollectionId: String,
+        strategy: TermMapMoveStrategy,
+    ) = Unit
 
     override suspend fun updateItemTranslationStatus(
         id: String,

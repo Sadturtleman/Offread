@@ -5,6 +5,7 @@ import com.android.offread.library.domain.LibraryRepository
 import com.android.offread.library.domain.model.Collection
 import com.android.offread.library.domain.model.LibraryItem
 import com.android.offread.library.domain.model.LibrarySort
+import com.android.offread.library.domain.model.TermMapMoveStrategy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
@@ -55,6 +56,17 @@ class FakeLibraryRepository : LibraryRepository {
         val id = "i${nextId++}"
         items.value = items.value + item.copy(id = id)
         return id
+    }
+
+    var lastMoveStrategy: TermMapMoveStrategy? = null
+
+    override suspend fun moveItem(
+        id: String,
+        targetCollectionId: String,
+        strategy: TermMapMoveStrategy,
+    ) {
+        lastMoveStrategy = strategy
+        items.value = items.value.map { if (it.id == id) it.copy(collectionId = targetCollectionId) else it }
     }
 
     override suspend fun updateItemTranslationStatus(
