@@ -48,5 +48,8 @@ class RoomSegmentCache
 
         override suspend fun stats(): CacheStats = CacheStats(entryCount = dao.entryCount(), bytes = dao.totalBytes())
 
+        override suspend fun usageByItem(): Map<String, CacheStats> =
+            dao.usageByItem().associate { it.itemId to CacheStats(entryCount = it.entryCount, bytes = it.bytes) }
+
         override suspend fun clear() = dao.clear()
     }

@@ -34,6 +34,8 @@ class FakeSegmentCache : SegmentCache {
 
     override suspend fun stats(): CacheStats = CacheStats(entries.size, entries.values.sumOf { it.toByteArray().size.toLong() })
 
+    override suspend fun usageByItem(): Map<String, CacheStats> = emptyMap()
+
     override suspend fun clear() = entries.clear()
 
     fun seed(

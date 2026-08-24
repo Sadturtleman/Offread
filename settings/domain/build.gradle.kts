@@ -18,6 +18,8 @@ dependencies {
     api(project(":core:domain"))
     // F-029: 번역 모델 카탈로그·다운로드 포트
     api(project(":translate:domain"))
+    // F-031: 저장 공간을 쓰는 콘텐츠 목록
+    api(project(":library:domain"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.javax.inject)
 

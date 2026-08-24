@@ -25,6 +25,13 @@ object DisplaySettingsPage : Page {
     override fun toRoute(): NavRoute = NavRoute(PATH)
 }
 
+/** S-05 저장·캐시 관리(F-031). */
+object StorageSettingsPage : Page {
+    const val PATH = AppRoutes.SETTINGS_STORAGE
+
+    override fun toRoute(): NavRoute = NavRoute(PATH)
+}
+
 /** S-06 정보(F-032). */
 object InfoPage : Page {
     const val PATH = AppRoutes.SETTINGS_INFO

@@ -33,6 +33,9 @@ interface SegmentCache {
     /** 캐시 사용량(F-031 저장·캐시 관리). */
     suspend fun stats(): CacheStats
 
+    /** 아이템별 캐시 사용량(F-031 콘텐츠 목록). 캐시가 없는 아이템은 빠진다. */
+    suspend fun usageByItem(): Map<String, CacheStats>
+
     /** 전체 비우기(F-031, 정책 P-04). */
     suspend fun clear()
 }

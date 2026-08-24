@@ -37,6 +37,17 @@ interface SegmentCacheDao {
     @Query("SELECT COALESCE(SUM(sizeBytes), 0) FROM segment_cache")
     suspend fun totalBytes(): Long
 
+    /** F-031: 아이템별 캐시 사용량 집계. */
+    @Query("SELECT itemId, COUNT(*) AS entryCount, COALESCE(SUM(sizeBytes), 0) AS bytes FROM segment_cache GROUP BY itemId")
+    suspend fun usageByItem(): List<SegmentCacheUsage>
+
     @Query("DELETE FROM segment_cache")
     suspend fun clear()
 }
+
+/** 아이템별 캐시 집계 결과(F-031). */
+data class SegmentCacheUsage(
+    val itemId: String,
+    val entryCount: Int,
+    val bytes: Long,
+)

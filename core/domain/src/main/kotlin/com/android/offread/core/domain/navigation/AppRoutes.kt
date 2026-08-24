@@ -36,6 +36,7 @@ object AppRoutes {
     const val SETTINGS_HOME = "settings"
     const val SETTINGS_MODELS = "settings/models"
     const val SETTINGS_DISPLAY = "settings/display"
+    const val SETTINGS_STORAGE = "settings/storage"
     const val SETTINGS_INFO = "settings/info"
 
     // 공용 인자 키
