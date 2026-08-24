@@ -4,7 +4,9 @@ import com.android.offread.translate.data.RoomSegmentCache
 import com.android.offread.translate.data.StubTranslationEngine
 import com.android.offread.translate.data.TermGlossaryProvider
 import com.android.offread.translate.data.TermRepositorySuggestionSink
+import com.android.offread.translate.data.WorkManagerPretranslateScheduler
 import com.android.offread.translate.domain.GlossaryProvider
+import com.android.offread.translate.domain.PretranslateScheduler
 import com.android.offread.translate.domain.SegmentCache
 import com.android.offread.translate.domain.TermSuggestionSink
 import com.android.offread.translate.domain.TranslationEngine
@@ -32,4 +34,8 @@ abstract class TranslateDataModule {
     @Binds
     @Singleton
     abstract fun bindTermSuggestionSink(impl: TermRepositorySuggestionSink): TermSuggestionSink
+
+    @Binds
+    @Singleton
+    abstract fun bindPretranslateScheduler(impl: WorkManagerPretranslateScheduler): PretranslateScheduler
 }
