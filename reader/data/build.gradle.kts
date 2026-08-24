@@ -29,6 +29,8 @@ kotlin {
 dependencies {
     implementation(project(":reader:domain"))
     implementation(project(":core:entity"))
+    // F-020/F-021: 본문은 번역 파이프라인·세그먼트 캐시를 거쳐 만들어진다.
+    implementation(project(":translate:domain"))
 
     implementation(libs.kotlinx.coroutines.core)
 

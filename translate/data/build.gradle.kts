@@ -29,6 +29,8 @@ kotlin {
 dependencies {
     implementation(project(":translate:domain"))
     implementation(project(":core:database"))
+    // F-020: 번역에 주입할 확정 용어를 용어맵에서 읽는다.
+    implementation(project(":terms:domain"))
 
     implementation(libs.kotlinx.coroutines.core)
 
