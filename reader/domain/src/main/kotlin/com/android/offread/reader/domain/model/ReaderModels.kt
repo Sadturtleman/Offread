@@ -1,5 +1,7 @@
 package com.android.offread.reader.domain.model
 
+import com.android.offread.core.entity.TranslationStatus
+
 /**
  * 리더 본문의 최소 단위(문장/문단). 미번역이면 원문을 노출하고 인라인 재시도를 제공한다(P-08).
  *
@@ -24,7 +26,11 @@ data class ChapterContent(
     val chapterIndex: Int,
     val title: String,
     val segments: List<ReaderSegment>,
-)
+) {
+    /** 이 챕터의 배지 상태(F-019 공통 규칙). 세그먼트가 전부 번역돼야 오프라인 열람 가능으로 본다. */
+    val translationStatus: TranslationStatus
+        get() = TranslationStatus.of(total = segments.size, translated = segments.count { it.isTranslated })
+}
 
 /** 리더 테마(F-016). */
 enum class ReaderTheme {

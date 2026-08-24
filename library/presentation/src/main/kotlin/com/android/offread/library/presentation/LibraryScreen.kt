@@ -23,7 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.offread.core.domain.navigation.AppRoutes
 import com.android.offread.core.domain.navigation.NavRoute
-import com.android.offread.core.entity.TranslationStatus
+import com.android.offread.core.ui.badge.TranslationStatusBadge
 import com.android.offread.core.ui.helper.LocalMessageHelper
 import com.android.offread.core.ui.helper.LocalNavigationHelper
 import com.android.offread.core.ui.helper.singleClickable
@@ -193,21 +193,9 @@ private fun ItemRow(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            TranslationBadge(item.translationStatus)
+            TranslationStatusBadge(item.translationStatus)
         }
     }
-}
-
-@Composable
-private fun TranslationBadge(status: TranslationStatus) {
-    val label =
-        when (status) {
-            TranslationStatus.UNTRANSLATED -> "미번역"
-            TranslationStatus.TRANSLATING -> "번역 중"
-            TranslationStatus.CACHED -> "캐시됨"
-            TranslationStatus.CLOUD_FALLBACK -> "폴백"
-        }
-    androidx.compose.material3.AssistChip(onClick = {}, enabled = false, label = { Text(label) })
 }
 
 @Composable
