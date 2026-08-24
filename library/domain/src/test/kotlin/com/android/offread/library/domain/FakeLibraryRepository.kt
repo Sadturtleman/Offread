@@ -4,6 +4,7 @@ import com.android.offread.core.entity.TranslationStatus
 import com.android.offread.library.domain.model.Collection
 import com.android.offread.library.domain.model.LibraryItem
 import com.android.offread.library.domain.model.LibrarySort
+import com.android.offread.library.domain.model.SearchQuery
 import com.android.offread.library.domain.model.TermMapMoveStrategy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,6 +50,8 @@ class FakeLibraryRepository : LibraryRepository {
 
     override fun observeItems(collectionId: String?): Flow<List<LibraryItem>> =
         items.map { list -> if (collectionId == null) list else list.filter { it.collectionId == collectionId } }
+
+    override fun searchItems(query: SearchQuery): Flow<List<LibraryItem>> = items.map { list -> list.filter { query.matches(it) } }
 
     override fun observeItem(id: String): Flow<LibraryItem?> = items.map { list -> list.firstOrNull { it.id == id } }
 

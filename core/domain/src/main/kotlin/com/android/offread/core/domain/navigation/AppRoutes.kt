@@ -24,6 +24,7 @@ object AppRoutes {
 
     // library
     const val WEBNOVEL_DETAIL = "library/webnovel"
+    const val SEARCH = "library/search"
 
     // reader
     const val READER = "reader/webnovel"
