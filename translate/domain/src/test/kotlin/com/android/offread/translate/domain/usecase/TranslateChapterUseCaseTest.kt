@@ -3,8 +3,10 @@ package com.android.offread.translate.domain.usecase
 import com.android.offread.core.entity.LanguagePair
 import com.android.offread.translate.domain.FakeGlossaryProvider
 import com.android.offread.translate.domain.FakeSegmentCache
+import com.android.offread.translate.domain.FakeTermSuggestionSink
 import com.android.offread.translate.domain.FakeTranslationEngine
 import com.android.offread.translate.domain.GlossaryPostProcessor
+import com.android.offread.translate.domain.TermCandidateExtractor
 import com.android.offread.translate.domain.model.GlossaryEntry
 import com.android.offread.translate.domain.model.Segment
 import com.android.offread.translate.domain.model.SegmentCacheKey
@@ -31,10 +33,18 @@ class TranslateChapterUseCaseTest {
         segments = originals.mapIndexed { index, text -> Segment("seg-${index + 1}", text) },
     )
 
+    private val sink = FakeTermSuggestionSink()
+
     private fun useCase(
         engine: FakeTranslationEngine = FakeTranslationEngine(),
         glossary: List<GlossaryEntry> = emptyList(),
-    ) = TranslateChapterUseCase(engine, cache, FakeGlossaryProvider(glossary), GlossaryPostProcessor())
+    ) = TranslateChapterUseCase(
+        engine,
+        cache,
+        FakeGlossaryProvider(glossary),
+        GlossaryPostProcessor(),
+        SuggestTermsUseCase(TermCandidateExtractor(), engine, sink),
+    )
 
     @Test
     fun `캐시가 비어 있으면 추론하고 결과를 캐시에 넣는다`() =
@@ -109,6 +119,33 @@ class TranslateChapterUseCaseTest {
         }
 
     @Test
+    fun `새로 번역한 원문에서 용어 후보를 제안한다`() =
+        runTest {
+            useCase()(
+                request(
+                    "ルーデウスは分かれ道の前で立ち止まった。",
+                    "ルーデウスは地図を畳んだ。",
+                ),
+            )
+
+            assertEquals(listOf("ルーデウス"), sink.suggestions.map { it.source })
+            assertEquals("c1", sink.suggestions.single().collectionId)
+        }
+
+    @Test
+    fun `전부 캐시 히트면 이미 제안이 끝난 범위라 다시 제안하지 않는다`() =
+        runTest {
+            val first = "ルーデウスは分かれ道の前で立ち止まった。"
+            val second = "ルーデウスは地図を畳んだ。"
+            cache.seed(SegmentCacheKey.of(first, "c1", "v1"), "캐시 1")
+            cache.seed(SegmentCacheKey.of(second, "c1", "v1"), "캐시 2")
+
+            useCase()(request(first, second))
+
+            assertTrue(sink.suggestions.isEmpty())
+        }
+
+    @Test
     fun `세그먼트 하나가 실패해도 나머지는 계속 번역한다`() =
         runTest {
             var calls = 0
@@ -127,7 +164,13 @@ class TranslateChapterUseCaseTest {
                     override suspend fun modelVersion(pair: LanguagePair): String = "v1"
                 }
             val useCase =
-                TranslateChapterUseCase(engine, cache, FakeGlossaryProvider(), GlossaryPostProcessor())
+                TranslateChapterUseCase(
+                    engine,
+                    cache,
+                    FakeGlossaryProvider(),
+                    GlossaryPostProcessor(),
+                    SuggestTermsUseCase(TermCandidateExtractor(), engine, sink),
+                )
 
             val result = useCase(request("原文1", "原文2", "原文3"))
 
@@ -143,7 +186,18 @@ class TranslateSegmentUseCaseTest {
             val cache = FakeSegmentCache()
             val engine = FakeTranslationEngine()
             val chapter =
-                TranslateChapterUseCase(engine, cache, FakeGlossaryProvider(), GlossaryPostProcessor())
+                TranslateChapterUseCase(
+                    engine,
+                    cache,
+                    FakeGlossaryProvider(),
+                    GlossaryPostProcessor(),
+                    SuggestTermsUseCase(
+                        TermCandidateExtractor(),
+                        engine,
+                        com.android.offread.translate.domain
+                            .FakeTermSuggestionSink(),
+                    ),
+                )
 
             val result =
                 TranslateSegmentUseCase(chapter)(

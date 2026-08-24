@@ -73,3 +73,28 @@ class FakeGlossaryProvider(
 ) : GlossaryProvider {
     override suspend fun glossaryFor(collectionId: String): List<GlossaryEntry> = glossary
 }
+
+/** 제안을 기록하는 [TermSuggestionSink] 더블. */
+class FakeTermSuggestionSink(
+    private val existing: Set<String> = emptySet(),
+) : TermSuggestionSink {
+    data class Suggestion(
+        val collectionId: String,
+        val source: String,
+        val translation: String,
+        val occurrenceCount: Int,
+    )
+
+    val suggestions = mutableListOf<Suggestion>()
+
+    override suspend fun existingSources(collectionId: String): Set<String> = existing
+
+    override suspend fun suggest(
+        collectionId: String,
+        source: String,
+        translation: String,
+        occurrenceCount: Int,
+    ) {
+        suggestions += Suggestion(collectionId, source, translation, occurrenceCount)
+    }
+}

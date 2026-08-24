@@ -25,13 +25,31 @@ class TranslateChapterUseCase
         private val cache: SegmentCache,
         private val glossaryProvider: GlossaryProvider,
         private val postProcessor: GlossaryPostProcessor,
+        private val suggestTerms: SuggestTermsUseCase,
     ) {
         suspend operator fun invoke(request: TranslationRequest): List<TranslatedSegment> {
             val glossary = glossaryProvider.glossaryFor(request.collectionId)
             val modelVersion = engine.modelVersion(request.languagePair)
-            return request.segments.map { segment ->
-                translateSegment(segment, request, glossary, modelVersion)
-            }
+            val results =
+                request.segments.map { segment ->
+                    translateSegment(segment, request, glossary, modelVersion)
+                }
+            suggestTermsFrom(request, results)
+            return results
+        }
+
+        /**
+         * F-024: 이번에 새로 번역한 원문에서만 용어를 제안한다. 전부 캐시 히트라면 이미 지난
+         * 번역에서 제안이 끝난 범위이므로 건너뛴다. 제안 실패가 번역을 망치지 않게 격리한다.
+         */
+        private suspend fun suggestTermsFrom(
+            request: TranslationRequest,
+            results: List<TranslatedSegment>,
+        ) {
+            val freshOriginals =
+                results.filter { !it.fromCache && it.translated != null }.map { it.original }
+            if (freshOriginals.isEmpty()) return
+            runCatching { suggestTerms(request.collectionId, request.languagePair, freshOriginals) }
         }
 
         private suspend fun translateSegment(
