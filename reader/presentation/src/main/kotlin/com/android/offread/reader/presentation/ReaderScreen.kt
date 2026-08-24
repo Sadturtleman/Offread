@@ -1,6 +1,8 @@
 package com.android.offread.reader.presentation
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -83,6 +85,7 @@ fun ReaderScreen(
                     segment = segment,
                     fontScale = state.settings.fontScale,
                     onRetry = { viewModel.onIntent(ReaderIntent.RetrySegment(segment.id)) },
+                    onLongPress = { viewModel.onIntent(ReaderIntent.LongPressSegment(segment.id)) },
                 )
             }
         }
@@ -107,6 +110,14 @@ fun ReaderScreen(
         }
     }
 
+    TermQuickEditDialogs(
+        quickEdit = state.quickEdit,
+        onDismiss = { viewModel.onIntent(ReaderIntent.DismissQuickEdit) },
+        onPickWord = { viewModel.onIntent(ReaderIntent.PickWord(it)) },
+        onSubmit = { translation, pinned -> viewModel.onIntent(ReaderIntent.SubmitTerm(translation, pinned)) },
+        onConfirmRetranslate = { viewModel.onIntent(ReaderIntent.ConfirmRetranslate(it)) },
+    )
+
     if (state.settingsVisible) {
         ReaderSettingsSheet(
             settings = state.settings,
@@ -117,16 +128,20 @@ fun ReaderScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SegmentView(
     segment: ReaderSegment,
     fontScale: Float,
     onRetry: () -> Unit,
+    onLongPress: () -> Unit,
 ) {
     if (segment.isTranslated) {
         Text(
             text = segment.displayText,
             style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp * fontScale),
+            // F-017: 본문 롱프레스 → 용어 빠른편집
+            modifier = Modifier.combinedClickable(onClick = {}, onLongClick = onLongPress),
         )
     } else {
         Column(
@@ -142,6 +157,7 @@ private fun SegmentView(
                 text = segment.original,
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp * fontScale),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.combinedClickable(onClick = {}, onLongClick = onLongPress),
             )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
