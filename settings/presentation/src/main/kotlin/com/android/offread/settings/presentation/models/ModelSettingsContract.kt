@@ -5,8 +5,10 @@ import com.android.offread.core.ui.mvi.MviIntent
 import com.android.offread.core.ui.mvi.ReducerEvent
 import com.android.offread.core.ui.mvi.UiState
 import com.android.offread.settings.domain.model.ManagedModel
+import com.android.offread.translate.domain.model.TranslationEngineKind
 
 data class ModelSettingsUiState(
+    val engine: TranslationEngineKind = TranslationEngineKind.ML_KIT,
     val models: List<ManagedModel> = emptyList(),
     /** 삭제 확인 대상(모델 id). */
     val deleteTarget: ManagedModel? = null,
@@ -16,6 +18,10 @@ data class ModelSettingsUiState(
 }
 
 sealed interface ModelSettingsIntent : MviIntent {
+    data class SelectEngine(
+        val kind: TranslationEngineKind,
+    ) : ModelSettingsIntent
+
     data class Download(
         val model: ManagedModel,
     ) : ModelSettingsIntent
@@ -30,6 +36,10 @@ sealed interface ModelSettingsIntent : MviIntent {
 }
 
 sealed interface ModelSettingsEvent : ReducerEvent {
+    data class EngineChanged(
+        val kind: TranslationEngineKind,
+    ) : ModelSettingsEvent
+
     data class ModelsChanged(
         val models: List<ManagedModel>,
     ) : ModelSettingsEvent

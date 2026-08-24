@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -29,6 +30,7 @@ import com.android.offread.core.entity.LanguagePair
 import com.android.offread.core.ui.helper.LocalMessageHelper
 import com.android.offread.settings.domain.model.ManagedModel
 import com.android.offread.translate.domain.model.ModelDownloadStatus
+import com.android.offread.translate.domain.model.TranslationEngineKind
 
 /**
  * S-02 엔진·모델 관리(F-029). 설치 모델 목록·용량과 언어쌍별 다운로드/삭제.
@@ -58,8 +60,20 @@ fun ModelSettingsScreen(
             modifier = Modifier.padding(top = 4.dp),
         )
 
+        EngineSection(
+            selected = state.engine,
+            onSelect = { viewModel.onIntent(ModelSettingsIntent.SelectEngine(it)) },
+        )
+
+        Text(
+            text = "언어쌍별 모델",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(top = 24.dp),
+        )
+
         LazyColumn(
-            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(state.models, key = { it.model.id }) { managed ->
@@ -91,6 +105,48 @@ fun ModelSettingsScreen(
         )
     }
 }
+
+@Composable
+private fun EngineSection(
+    selected: TranslationEngineKind,
+    onSelect: (TranslationEngineKind) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    ElevatedCard(modifier = modifier.fillMaxWidth().padding(top = 16.dp)) {
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(text = "번역 엔진", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TranslationEngineKind.entries.forEach { kind ->
+                    FilterChip(
+                        selected = selected == kind,
+                        onClick = { onSelect(kind) },
+                        label = { Text(kind.label()) },
+                    )
+                }
+            }
+            Text(
+                text = selected.description(),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+internal fun TranslationEngineKind.label(): String =
+    when (this) {
+        TranslationEngineKind.ML_KIT -> "ML Kit"
+        TranslationEngineKind.ON_DEVICE_LLM -> "온디바이스 LLM"
+    }
+
+private fun TranslationEngineKind.description(): String =
+    when (this) {
+        TranslationEngineKind.ML_KIT ->
+            "언어쌍당 약 30MB 모델을 자동으로 받아 바로 번역해요. 가볍지만 용어맵은 번역 후 치환으로만 반영돼요."
+        TranslationEngineKind.ON_DEVICE_LLM ->
+            "앱 전용 저장소 llm 폴더의 .task 또는 .litertlm 모델을 써요. 용어맵을 프롬프트로 넣어 " +
+                "일관성이 높지만 모델 파일을 직접 넣어야 해요."
+    }
 
 @Composable
 private fun ModelRow(

@@ -5,6 +5,8 @@ import com.android.offread.core.ui.mvi.MviViewModel
 import com.android.offread.settings.domain.usecase.DeleteModelUseCase
 import com.android.offread.settings.domain.usecase.DownloadModelUseCase
 import com.android.offread.settings.domain.usecase.ObserveManagedModelsUseCase
+import com.android.offread.settings.domain.usecase.ObserveTranslationEngineUseCase
+import com.android.offread.settings.domain.usecase.SelectTranslationEngineUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -20,6 +22,8 @@ class ModelSettingsViewModel
         private val observeManagedModels: ObserveManagedModelsUseCase,
         private val downloadModel: DownloadModelUseCase,
         private val deleteModel: DeleteModelUseCase,
+        private val observeTranslationEngine: ObserveTranslationEngineUseCase,
+        private val selectTranslationEngine: SelectTranslationEngineUseCase,
     ) : MviViewModel<ModelSettingsIntent, ModelSettingsUiState, ModelSettingsEvent, ModelSettingsEffect>(
             ModelSettingsUiState(),
         ) {
@@ -29,10 +33,20 @@ class ModelSettingsViewModel
                     dispatch(ModelSettingsEvent.ModelsChanged(models))
                 }
             }
+            viewModelScope.launch {
+                observeTranslationEngine().collect { kind ->
+                    dispatch(ModelSettingsEvent.EngineChanged(kind))
+                }
+            }
         }
 
         override fun onIntent(intent: ModelSettingsIntent) {
             when (intent) {
+                is ModelSettingsIntent.SelectEngine ->
+                    viewModelScope.launch {
+                        selectTranslationEngine(intent.kind)
+                        emitEffect(ModelSettingsEffect.ShowMessage("다음 번역부터 새 엔진을 써요."))
+                    }
                 is ModelSettingsIntent.Download ->
                     viewModelScope.launch {
                         downloadModel(intent.model.model)
@@ -58,6 +72,7 @@ class ModelSettingsViewModel
             event: ModelSettingsEvent,
         ): ModelSettingsUiState =
             when (event) {
+                is ModelSettingsEvent.EngineChanged -> state.copy(engine = event.kind)
                 is ModelSettingsEvent.ModelsChanged -> state.copy(models = event.models)
                 is ModelSettingsEvent.DeleteTargetChanged -> state.copy(deleteTarget = event.model)
             }
