@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.android.offread.core.ui.badge.TranslationStatusBadge
 import com.android.offread.core.ui.helper.LocalMessageHelper
 import com.android.offread.reader.domain.model.ReaderSegment
 
@@ -69,6 +70,7 @@ fun ReaderScreen(
                     fontWeight = FontWeight.SemiBold,
                 )
             }
+            TranslationStatusBadge(state.chapterStatus)
             TextButton(onClick = { viewModel.onIntent(ReaderIntent.OpenSettings) }) { Text("Aa") }
         }
 

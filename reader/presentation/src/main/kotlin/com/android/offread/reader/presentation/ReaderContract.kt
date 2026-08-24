@@ -1,5 +1,6 @@
 package com.android.offread.reader.presentation
 
+import com.android.offread.core.entity.TranslationStatus
 import com.android.offread.core.ui.mvi.MviEffect
 import com.android.offread.core.ui.mvi.MviIntent
 import com.android.offread.core.ui.mvi.ReducerEvent
@@ -18,6 +19,7 @@ data class ReaderUiState(
     val chapterIndex: Int get() = content?.chapterIndex ?: 0
     val hasPrevious: Boolean get() = chapterIndex > 1
     val hasNext: Boolean get() = chapterIndex < totalChapters
+    val chapterStatus: TranslationStatus get() = content?.translationStatus ?: TranslationStatus.UNTRANSLATED
 }
 
 sealed interface ReaderIntent : MviIntent {

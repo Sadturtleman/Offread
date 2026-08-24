@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -28,7 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.android.offread.core.domain.navigation.AppRoutes
 import com.android.offread.core.domain.navigation.NavRoute
 import com.android.offread.core.entity.SerialStatus
-import com.android.offread.core.entity.TranslationStatus
+import com.android.offread.core.ui.badge.TranslationStatusBadge
 import com.android.offread.core.ui.helper.LocalMessageHelper
 import com.android.offread.core.ui.helper.LocalNavigationHelper
 import com.android.offread.library.domain.model.Chapter
@@ -83,7 +82,7 @@ fun WebNovelDetailScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                TranslationBadge(item.translationStatus)
+                TranslationStatusBadge(item.translationStatus)
 
                 Button(
                     onClick = { viewModel.onIntent(WebNovelDetailIntent.ContinueReading) },
@@ -155,18 +154,6 @@ private fun ChapterRow(chapter: Chapter) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(text = chapter.title, style = MaterialTheme.typography.bodyLarge)
-        TranslationBadge(chapter.translationStatus)
+        TranslationStatusBadge(chapter.translationStatus)
     }
-}
-
-@Composable
-private fun TranslationBadge(status: TranslationStatus) {
-    val label =
-        when (status) {
-            TranslationStatus.UNTRANSLATED -> "미번역"
-            TranslationStatus.TRANSLATING -> "번역 중"
-            TranslationStatus.CACHED -> "캐시됨"
-            TranslationStatus.CLOUD_FALLBACK -> "폴백"
-        }
-    AssistChip(onClick = {}, enabled = false, label = { Text(label) })
 }
