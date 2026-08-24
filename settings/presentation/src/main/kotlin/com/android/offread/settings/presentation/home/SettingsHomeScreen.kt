@@ -19,6 +19,7 @@ import com.android.offread.core.ui.helper.LocalNavigationHelper
 import com.android.offread.core.ui.helper.singleClickable
 import com.android.offread.settings.domain.DisplaySettingsPage
 import com.android.offread.settings.domain.InfoPage
+import com.android.offread.settings.domain.ModelSettingsPage
 
 private const val PREPARING_MESSAGE = "준비 중이에요."
 
@@ -44,7 +45,7 @@ fun SettingsHomeScreen(modifier: Modifier = Modifier) {
             SettingsMenuRow(
                 title = "번역 엔진·모델",
                 description = "엔진 선택, 모델 다운로드 관리",
-                onClick = { messageHelper.showToast(PREPARING_MESSAGE) },
+                onClick = { navigationHelper.navigateTo(ModelSettingsPage) },
             )
             SettingsMenuRow(
                 title = "표시",

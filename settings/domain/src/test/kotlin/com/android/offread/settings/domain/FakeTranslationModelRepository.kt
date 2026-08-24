@@ -1,4 +1,4 @@
-package com.android.offread.onboarding.domain
+package com.android.offread.settings.domain
 
 import com.android.offread.core.entity.LanguagePair
 import com.android.offread.core.entity.TranslationModel
@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-/** 인메모리 [TranslationModelRepository] 테스트 더블. 카탈로그와 상태를 직접 제어한다. */
+/** 인메모리 [TranslationModelRepository] 더블(F-029 모델 관리 테스트용). */
 class FakeTranslationModelRepository(
     installed: Set<LanguagePair> = emptySet(),
 ) : TranslationModelRepository {
@@ -16,14 +16,36 @@ class FakeTranslationModelRepository(
     private val downloads = MutableStateFlow<Map<String, ModelDownloadStatus>>(emptyMap())
 
     val enqueued = mutableListOf<TranslationModel>()
-    val paused = mutableListOf<String>()
-    val resumed = mutableListOf<String>()
     val deleted = mutableListOf<String>()
+
+    override fun catalogFor(pairs: Set<LanguagePair>): List<TranslationModel> =
+        pairs.filter { it.isSelectable }.sortedBy { it.name }.map { pair -> model(pair) }
 
     override val installedLanguagePairs: Flow<Set<LanguagePair>> = installedState.asStateFlow()
 
-    override fun catalogFor(pairs: Set<LanguagePair>): List<TranslationModel> =
-        pairs.filter { it.isSelectable }.map { pair ->
+    override fun observeDownloads(): Flow<Map<String, ModelDownloadStatus>> = downloads.asStateFlow()
+
+    override suspend fun enqueue(models: List<TranslationModel>) {
+        enqueued += models
+        downloads.value = downloads.value + models.associate { it.id to ModelDownloadStatus.Queued }
+    }
+
+    override suspend fun pause(modelId: String) = Unit
+
+    override suspend fun resume(modelId: String) = Unit
+
+    override suspend fun delete(modelId: String) {
+        deleted += modelId
+        installedState.value = installedState.value.filterNot { model(it).id == modelId }.toSet()
+        downloads.value = downloads.value - modelId
+    }
+
+    fun emitDownloads(map: Map<String, ModelDownloadStatus>) {
+        downloads.value = map
+    }
+
+    companion object {
+        fun model(pair: LanguagePair) =
             TranslationModel(
                 id = "model-${pair.name.lowercase()}",
                 languagePair = pair,
@@ -32,31 +54,5 @@ class FakeTranslationModelRepository(
                 version = "1.0",
                 sha256 = "test",
             )
-        }
-
-    override fun observeDownloads(): Flow<Map<String, ModelDownloadStatus>> = downloads.asStateFlow()
-
-    override suspend fun enqueue(models: List<TranslationModel>) {
-        enqueued += models
-    }
-
-    override suspend fun pause(modelId: String) {
-        paused += modelId
-    }
-
-    override suspend fun delete(modelId: String) {
-        deleted += modelId
-        installedState.value =
-            installedState.value.filterNot { pair -> "model-${pair.name.lowercase()}" == modelId }.toSet()
-        downloads.value = downloads.value - modelId
-    }
-
-    override suspend fun resume(modelId: String) {
-        resumed += modelId
-    }
-
-    /** 테스트에서 다운로드 상태를 임의로 갱신한다. */
-    fun emitDownloads(map: Map<String, ModelDownloadStatus>) {
-        downloads.value = map
     }
 }

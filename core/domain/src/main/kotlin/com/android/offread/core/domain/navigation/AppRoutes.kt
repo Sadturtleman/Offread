@@ -34,6 +34,7 @@ object AppRoutes {
 
     // settings
     const val SETTINGS_HOME = "settings"
+    const val SETTINGS_MODELS = "settings/models"
     const val SETTINGS_DISPLAY = "settings/display"
     const val SETTINGS_INFO = "settings/info"
 

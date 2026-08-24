@@ -1,8 +1,8 @@
 package com.android.offread.onboarding.domain.usecase
 
 import com.android.offread.core.entity.TranslationModel
-import com.android.offread.onboarding.domain.TranslationModelRepository
-import com.android.offread.onboarding.domain.model.ModelDownloadStatus
+import com.android.offread.translate.domain.TranslationModelRepository
+import com.android.offread.translate.domain.model.ModelDownloadStatus
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 

@@ -22,10 +22,12 @@ import com.android.offread.reader.domain.ReaderPage
 import com.android.offread.reader.presentation.ReaderScreen
 import com.android.offread.settings.domain.DisplaySettingsPage
 import com.android.offread.settings.domain.InfoPage
+import com.android.offread.settings.domain.ModelSettingsPage
 import com.android.offread.settings.domain.SettingsHomePage
 import com.android.offread.settings.presentation.display.DisplaySettingsScreen
 import com.android.offread.settings.presentation.home.SettingsHomeScreen
 import com.android.offread.settings.presentation.info.InfoScreen
+import com.android.offread.settings.presentation.models.ModelSettingsScreen
 import com.android.offread.terms.domain.TermMapPage
 import com.android.offread.terms.presentation.TermMapScreen
 
@@ -90,6 +92,10 @@ val appRoutes: List<AppRoute> =
         AppRoute(
             path = SettingsHomePage.PATH,
             render = { SettingsHomeScreen() },
+        ),
+        AppRoute(
+            path = ModelSettingsPage.PATH,
+            render = { ModelSettingsScreen() },
         ),
         AppRoute(
             path = DisplaySettingsPage.PATH,

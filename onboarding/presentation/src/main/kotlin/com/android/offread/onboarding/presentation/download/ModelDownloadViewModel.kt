@@ -3,13 +3,13 @@ package com.android.offread.onboarding.presentation.download
 import androidx.lifecycle.viewModelScope
 import com.android.offread.core.entity.TranslationModel
 import com.android.offread.core.ui.mvi.MviViewModel
-import com.android.offread.onboarding.domain.model.ModelDownloadStatus
 import com.android.offread.onboarding.domain.usecase.CompleteOnboardingUseCase
 import com.android.offread.onboarding.domain.usecase.EnqueueModelDownloadsUseCase
 import com.android.offread.onboarding.domain.usecase.ObserveModelDownloadsUseCase
 import com.android.offread.onboarding.domain.usecase.PauseModelDownloadUseCase
 import com.android.offread.onboarding.domain.usecase.ResolveRequiredModelsUseCase
 import com.android.offread.onboarding.domain.usecase.ResumeModelDownloadUseCase
+import com.android.offread.translate.domain.model.ModelDownloadStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject

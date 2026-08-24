@@ -1,8 +1,8 @@
 package com.android.offread.onboarding.domain.usecase
 
 import com.android.offread.onboarding.domain.TranslationEngine
-import com.android.offread.onboarding.domain.TranslationModelRepository
 import com.android.offread.onboarding.domain.model.TranslationSample
+import com.android.offread.translate.domain.TranslationModelRepository
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 

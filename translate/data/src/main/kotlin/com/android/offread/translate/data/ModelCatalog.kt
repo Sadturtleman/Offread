@@ -1,4 +1,4 @@
-package com.android.offread.onboarding.data
+package com.android.offread.translate.data
 
 import com.android.offread.core.entity.LanguagePair
 import com.android.offread.core.entity.TranslationModel
@@ -29,4 +29,7 @@ internal object ModelCatalog {
         ).associateBy { it.languagePair }
 
     fun forPairs(pairs: Set<LanguagePair>): List<TranslationModel> = pairs.mapNotNull { byPair[it] }
+
+    /** 모델 id 로 언어쌍 역조회(F-029 삭제). */
+    fun pairOf(modelId: String): LanguagePair? = byPair.values.firstOrNull { it.id == modelId }?.languagePair
 }

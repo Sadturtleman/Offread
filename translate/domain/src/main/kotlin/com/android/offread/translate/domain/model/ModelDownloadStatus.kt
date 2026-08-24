@@ -1,4 +1,4 @@
-package com.android.offread.onboarding.domain.model
+package com.android.offread.translate.domain.model
 
 /**
  * 번역 모델 1개의 다운로드 상태(F-003).
