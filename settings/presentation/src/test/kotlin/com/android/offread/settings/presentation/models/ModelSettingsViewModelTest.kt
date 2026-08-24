@@ -6,9 +6,13 @@ import com.android.offread.settings.domain.model.ManagedModel
 import com.android.offread.settings.domain.usecase.DeleteModelUseCase
 import com.android.offread.settings.domain.usecase.DownloadModelUseCase
 import com.android.offread.settings.domain.usecase.ObserveManagedModelsUseCase
+import com.android.offread.settings.domain.usecase.ObserveTranslationEngineUseCase
+import com.android.offread.settings.domain.usecase.SelectTranslationEngineUseCase
 import com.android.offread.settings.presentation.MainDispatcherRule
+import com.android.offread.translate.domain.TranslationEnginePreference
 import com.android.offread.translate.domain.TranslationModelRepository
 import com.android.offread.translate.domain.model.ModelDownloadStatus
+import com.android.offread.translate.domain.model.TranslationEngineKind
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -58,15 +62,29 @@ private class FakeModelRepository(
     }
 }
 
+private class FakeEnginePreference : TranslationEnginePreference {
+    private val state = MutableStateFlow(TranslationEngineKind.ML_KIT)
+
+    override val selected: Flow<TranslationEngineKind> = state.asStateFlow()
+
+    override suspend fun select(kind: TranslationEngineKind) {
+        state.value = kind
+    }
+}
+
 class ModelSettingsViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
+
+    private val enginePreference = FakeEnginePreference()
 
     private fun viewModel(repo: FakeModelRepository) =
         ModelSettingsViewModel(
             ObserveManagedModelsUseCase(repo),
             DownloadModelUseCase(repo),
             DeleteModelUseCase(repo),
+            ObserveTranslationEngineUseCase(enginePreference),
+            SelectTranslationEngineUseCase(enginePreference),
         )
 
     @Test
@@ -154,5 +172,21 @@ class ModelSettingsViewModelTest {
         assertTrue(ManagedModel(model, installed = false, status = ModelDownloadStatus.Queued).isBusy)
         assertFalse(ManagedModel(model, installed = false, status = null).isBusy)
         assertFalse(ManagedModel(model, installed = true, status = ModelDownloadStatus.Completed).isBusy)
+    }
+
+    @Test
+    fun `기본 엔진은 ML Kit 이다`() {
+        val vm = viewModel(FakeModelRepository())
+
+        assertEquals(TranslationEngineKind.ML_KIT, vm.uiState.value.engine)
+    }
+
+    @Test
+    fun `엔진을 바꾸면 상태와 저장값이 함께 바뀐다`() {
+        val vm = viewModel(FakeModelRepository())
+
+        vm.onIntent(ModelSettingsIntent.SelectEngine(TranslationEngineKind.ON_DEVICE_LLM))
+
+        assertEquals(TranslationEngineKind.ON_DEVICE_LLM, vm.uiState.value.engine)
     }
 }
