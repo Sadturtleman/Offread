@@ -165,5 +165,7 @@ class FakeSegmentCache : SegmentCache {
 
     override suspend fun stats(): CacheStats = CacheStats.EMPTY
 
+    override suspend fun usageByItem(): Map<String, CacheStats> = emptyMap()
+
     override suspend fun clear() = Unit
 }

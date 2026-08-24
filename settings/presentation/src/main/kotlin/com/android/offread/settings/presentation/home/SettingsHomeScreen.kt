@@ -20,6 +20,7 @@ import com.android.offread.core.ui.helper.singleClickable
 import com.android.offread.settings.domain.DisplaySettingsPage
 import com.android.offread.settings.domain.InfoPage
 import com.android.offread.settings.domain.ModelSettingsPage
+import com.android.offread.settings.domain.StorageSettingsPage
 
 private const val PREPARING_MESSAGE = "준비 중이에요."
 
@@ -60,7 +61,7 @@ fun SettingsHomeScreen(modifier: Modifier = Modifier) {
             SettingsMenuRow(
                 title = "저장·캐시",
                 description = "번역 캐시 용량, 정리",
-                onClick = { messageHelper.showToast(PREPARING_MESSAGE) },
+                onClick = { navigationHelper.navigateTo(StorageSettingsPage) },
             )
             SettingsMenuRow(
                 title = "정보",

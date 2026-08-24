@@ -24,10 +24,12 @@ import com.android.offread.settings.domain.DisplaySettingsPage
 import com.android.offread.settings.domain.InfoPage
 import com.android.offread.settings.domain.ModelSettingsPage
 import com.android.offread.settings.domain.SettingsHomePage
+import com.android.offread.settings.domain.StorageSettingsPage
 import com.android.offread.settings.presentation.display.DisplaySettingsScreen
 import com.android.offread.settings.presentation.home.SettingsHomeScreen
 import com.android.offread.settings.presentation.info.InfoScreen
 import com.android.offread.settings.presentation.models.ModelSettingsScreen
+import com.android.offread.settings.presentation.storage.StorageSettingsScreen
 import com.android.offread.terms.domain.TermMapPage
 import com.android.offread.terms.presentation.TermMapScreen
 
@@ -100,6 +102,10 @@ val appRoutes: List<AppRoute> =
         AppRoute(
             path = DisplaySettingsPage.PATH,
             render = { DisplaySettingsScreen() },
+        ),
+        AppRoute(
+            path = StorageSettingsPage.PATH,
+            render = { StorageSettingsScreen() },
         ),
         AppRoute(
             path = InfoPage.PATH,
