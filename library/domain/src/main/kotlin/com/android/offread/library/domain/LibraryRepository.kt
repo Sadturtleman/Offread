@@ -47,6 +47,12 @@ interface LibraryRepository {
         strategy: TermMapMoveStrategy,
     )
 
+    /** 연재 갱신으로 늘어난 총 화수 반영(F-013). */
+    suspend fun updateTotalChapters(
+        id: String,
+        totalChapters: Int,
+    )
+
     /** 아이템 번역 상태 갱신(F-019 배지 전이). */
     suspend fun updateItemTranslationStatus(
         id: String,

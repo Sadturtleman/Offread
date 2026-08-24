@@ -72,6 +72,13 @@ class FakeLibraryRepository(
         strategy: TermMapMoveStrategy,
     ) = Unit
 
+    override suspend fun updateTotalChapters(
+        id: String,
+        totalChapters: Int,
+    ) {
+        items.value = items.value.map { if (it.id == id) it.copy(totalChapters = totalChapters) else it }
+    }
+
     override suspend fun updateItemTranslationStatus(
         id: String,
         status: TranslationStatus,

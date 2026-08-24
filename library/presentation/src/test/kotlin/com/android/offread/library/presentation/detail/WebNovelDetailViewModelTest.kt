@@ -3,6 +3,7 @@ package com.android.offread.library.presentation.detail
 import com.android.offread.core.entity.ItemType
 import com.android.offread.core.entity.SerialStatus
 import com.android.offread.core.entity.TranslationStatus
+import com.android.offread.library.domain.ChapterSource
 import com.android.offread.library.domain.TranslationCache
 import com.android.offread.library.domain.model.LibraryItem
 import com.android.offread.library.domain.model.TermMapMoveStrategy
@@ -11,6 +12,7 @@ import com.android.offread.library.domain.usecase.GetItemUseCase
 import com.android.offread.library.domain.usecase.MoveItemUseCase
 import com.android.offread.library.domain.usecase.ObserveCollectionsUseCase
 import com.android.offread.library.domain.usecase.PrepareOfflineUseCase
+import com.android.offread.library.domain.usecase.RefreshChaptersUseCase
 import com.android.offread.library.presentation.FakeLibraryRepository
 import com.android.offread.library.presentation.MainDispatcherRule
 import kotlinx.coroutines.flow.first
@@ -20,6 +22,13 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+
+private class FakeChapterSource(
+    var totalChapters: Int = 5,
+    var error: Throwable? = null,
+) : ChapterSource {
+    override suspend fun fetchTotalChapters(sourceUrl: String): Int = error?.let { throw it } ?: totalChapters
+}
 
 private class FakeTranslationCache : TranslationCache {
     val invalidatedItemIds = mutableListOf<String>()
@@ -51,12 +60,14 @@ class WebNovelDetailViewModelTest {
     private fun viewModel(
         repo: FakeLibraryRepository,
         cache: FakeTranslationCache = FakeTranslationCache(),
+        source: FakeChapterSource = FakeChapterSource(),
     ) = WebNovelDetailViewModel(
         GetItemUseCase(repo),
         GetChaptersUseCase(),
         PrepareOfflineUseCase(repo),
         ObserveCollectionsUseCase(repo),
         MoveItemUseCase(repo, cache),
+        RefreshChaptersUseCase(repo, source),
     )
 
     @Test
@@ -171,5 +182,58 @@ class WebNovelDetailViewModelTest {
             assertEquals("i0", effect.itemId)
             // lastReadChapter 0 → 1화로 시작.
             assertEquals(1, effect.chapterIndex)
+        }
+
+    @Test
+    fun `새 화 확인은 화수를 갱신하고 챕터 목록에 반영한다`() =
+        runTest {
+            val repo = FakeLibraryRepository()
+            repo.seedItem(item())
+            val vm = viewModel(repo, source = FakeChapterSource(totalChapters = 8))
+            vm.start("i0")
+
+            vm.onIntent(WebNovelDetailIntent.CheckForNewChapters)
+
+            assertEquals("새 3화를 찾았어요.", (vm.effect.first() as WebNovelDetailEffect.ShowMessage).message)
+            assertEquals(
+                8,
+                vm.uiState.value.item
+                    ?.totalChapters,
+            )
+            assertEquals(8, vm.uiState.value.chapters.size)
+            assertFalse(vm.uiState.value.refreshing)
+        }
+
+    @Test
+    fun `새 화가 없으면 그대로 알린다`() =
+        runTest {
+            val repo = FakeLibraryRepository()
+            repo.seedItem(item())
+            val vm = viewModel(repo, source = FakeChapterSource(totalChapters = 5))
+            vm.start("i0")
+
+            vm.onIntent(WebNovelDetailIntent.CheckForNewChapters)
+
+            assertEquals("새로 올라온 화가 없어요.", (vm.effect.first() as WebNovelDetailEffect.ShowMessage).message)
+            assertEquals(
+                5,
+                vm.uiState.value.item
+                    ?.totalChapters,
+            )
+        }
+
+    @Test
+    fun `수집 실패는 메시지로 알린다`() =
+        runTest {
+            val repo = FakeLibraryRepository()
+            repo.seedItem(item())
+            val source = FakeChapterSource(error = IllegalArgumentException("지원하지 않는 사이트예요."))
+            val vm = viewModel(repo, source = source)
+            vm.start("i0")
+
+            vm.onIntent(WebNovelDetailIntent.CheckForNewChapters)
+
+            assertEquals("지원하지 않는 사이트예요.", (vm.effect.first() as WebNovelDetailEffect.ShowMessage).message)
+            assertFalse(vm.uiState.value.refreshing)
         }
 }

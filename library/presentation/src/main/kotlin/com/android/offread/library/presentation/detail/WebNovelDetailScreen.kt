@@ -112,8 +112,11 @@ fun WebNovelDetailScreen(
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                     )
-                    TextButton(onClick = { viewModel.onIntent(WebNovelDetailIntent.CheckForNewChapters) }) {
-                        Text("↻ 새 화 확인")
+                    TextButton(
+                        onClick = { viewModel.onIntent(WebNovelDetailIntent.CheckForNewChapters) },
+                        enabled = !state.refreshing,
+                    ) {
+                        Text(if (state.refreshing) "확인 중…" else "↻ 새 화 확인")
                     }
                 }
             }

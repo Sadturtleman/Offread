@@ -51,6 +51,13 @@ interface ItemDao {
         updatedAt: Long,
     )
 
+    @Query("UPDATE items SET totalChapters = :totalChapters, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun updateTotalChapters(
+        id: String,
+        totalChapters: Int,
+        updatedAt: Long,
+    )
+
     @Query("UPDATE items SET collectionId = :collectionId, updatedAt = :updatedAt WHERE id = :id")
     suspend fun updateCollection(
         id: String,
