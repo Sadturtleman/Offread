@@ -117,6 +117,13 @@ class LibraryRepositoryImpl
             itemDao.updateCollection(id, targetCollectionId, now)
         }
 
+        override suspend fun updateTotalChapters(
+            id: String,
+            totalChapters: Int,
+        ) {
+            itemDao.updateTotalChapters(id, totalChapters, System.currentTimeMillis())
+        }
+
         override suspend fun updateItemTranslationStatus(
             id: String,
             status: TranslationStatus,

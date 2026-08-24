@@ -28,6 +28,8 @@ kotlin {
 
 dependencies {
     implementation(project(":library:domain"))
+    // F-013: 연재 화수 조회는 가져오기(F-012)의 수집 포트를 재사용한다.
+    implementation(project(":importer:domain"))
     implementation(project(":core:entity"))
     implementation(project(":core:database"))
 

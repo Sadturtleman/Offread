@@ -8,13 +8,14 @@ import com.android.offread.library.domain.usecase.GetItemUseCase
 import com.android.offread.library.domain.usecase.MoveItemUseCase
 import com.android.offread.library.domain.usecase.ObserveCollectionsUseCase
 import com.android.offread.library.domain.usecase.PrepareOfflineUseCase
+import com.android.offread.library.domain.usecase.RefreshChaptersUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * F-008 웹소설 상세 + F-007 컬렉션 이동. [start] 로 아이템 id 를 받아 상세·챕터를 구독한다.
+ * F-008 웹소설 상세 + F-007 컬렉션 이동 + F-013 연재 업데이트 감지. [start] 로 아이템 id 를 받아 상세·챕터를 구독한다.
  */
 @HiltViewModel
 class WebNovelDetailViewModel
@@ -25,6 +26,7 @@ class WebNovelDetailViewModel
         private val prepareOffline: PrepareOfflineUseCase,
         private val observeCollections: ObserveCollectionsUseCase,
         private val moveItem: MoveItemUseCase,
+        private val refreshChapters: RefreshChaptersUseCase,
     ) : MviViewModel<WebNovelDetailIntent, WebNovelDetailUiState, WebNovelDetailEvent, WebNovelDetailEffect>(
             WebNovelDetailUiState(),
         ) {
@@ -54,11 +56,27 @@ class WebNovelDetailViewModel
                     val item = currentState.item ?: return
                     emitEffect(WebNovelDetailEffect.OpenReader(item.id, item.lastReadChapter.coerceAtLeast(1)))
                 }
-                WebNovelDetailIntent.CheckForNewChapters ->
-                    emitEffect(WebNovelDetailEffect.ShowMessage("새 화 확인은 곧 제공돼요."))
+                WebNovelDetailIntent.CheckForNewChapters -> checkForNewChapters()
                 WebNovelDetailIntent.MoveClicked -> dispatch(WebNovelDetailEvent.MoveDialogChanged(true))
                 WebNovelDetailIntent.DismissMoveDialog -> dispatch(WebNovelDetailEvent.MoveDialogChanged(false))
                 is WebNovelDetailIntent.SubmitMove -> submitMove(intent)
+            }
+        }
+
+        /** F-013: 원본 사이트에서 신규 화를 확인하고 목록을 갱신한다. */
+        private fun checkForNewChapters() {
+            if (currentState.refreshing) return
+            viewModelScope.launch {
+                dispatch(WebNovelDetailEvent.Refreshing(true))
+                refreshChapters(itemId)
+                    .onSuccess { added ->
+                        val message =
+                            if (added > 0) "새 ${added}화를 찾았어요." else "새로 올라온 화가 없어요."
+                        emitEffect(WebNovelDetailEffect.ShowMessage(message))
+                    }.onFailure {
+                        emitEffect(WebNovelDetailEffect.ShowMessage(it.message ?: "새 화 확인에 실패했어요."))
+                    }
+                dispatch(WebNovelDetailEvent.Refreshing(false))
             }
         }
 
@@ -93,5 +111,6 @@ class WebNovelDetailViewModel
                 is WebNovelDetailEvent.Preparing -> state.copy(preparing = event.preparing)
                 is WebNovelDetailEvent.CollectionsChanged -> state.copy(collections = event.collections)
                 is WebNovelDetailEvent.MoveDialogChanged -> state.copy(moveDialogVisible = event.visible)
+                is WebNovelDetailEvent.Refreshing -> state.copy(refreshing = event.refreshing)
             }
     }

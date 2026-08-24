@@ -15,6 +15,7 @@ data class WebNovelDetailUiState(
     val preparing: Boolean = false,
     val collections: List<Collection> = emptyList(),
     val moveDialogVisible: Boolean = false,
+    val refreshing: Boolean = false,
 ) : UiState
 
 sealed interface WebNovelDetailIntent : MviIntent {
@@ -50,6 +51,10 @@ sealed interface WebNovelDetailEvent : ReducerEvent {
 
     data class MoveDialogChanged(
         val visible: Boolean,
+    ) : WebNovelDetailEvent
+
+    data class Refreshing(
+        val refreshing: Boolean,
     ) : WebNovelDetailEvent
 }
 
