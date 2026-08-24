@@ -33,4 +33,7 @@ object DatabaseModule {
 
     @Provides
     fun provideTermDao(database: OffreadDatabase): TermDao = database.termDao()
+
+    @Provides
+    fun provideSegmentCacheDao(database: OffreadDatabase): SegmentCacheDao = database.segmentCacheDao()
 }
