@@ -5,6 +5,9 @@ import com.android.offread.reader.domain.model.ReaderTheme
 import com.android.offread.reader.domain.usecase.GetChapterContentUseCase
 import com.android.offread.reader.domain.usecase.RetrySegmentUseCase
 import com.android.offread.reader.domain.usecase.SaveReadingProgressUseCase
+import com.android.offread.terms.domain.usecase.UpsertTermUseCase
+import com.android.offread.translate.domain.TermCandidateExtractor
+import com.android.offread.translate.domain.usecase.InvalidateChapterCacheUseCase
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -16,12 +19,19 @@ class ReaderViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
+    private val termRepository = FakeTermRepository()
+    private val segmentCache = FakeSegmentCache()
+    private val chapterContent = FakeChapterContentRepository()
+
     private fun viewModel(repo: FakeLibraryRepository): ReaderViewModel =
         ReaderViewModel(
             GetItemUseCase(repo),
-            GetChapterContentUseCase(FakeChapterContentRepository()),
+            GetChapterContentUseCase(chapterContent),
             RetrySegmentUseCase(FakeChapterContentRepository()),
             SaveReadingProgressUseCase(repo),
+            UpsertTermUseCase(termRepository),
+            InvalidateChapterCacheUseCase(segmentCache),
+            TermCandidateExtractor(),
         )
 
     @Test
@@ -105,5 +115,73 @@ class ReaderViewModelTest {
         vm.onIntent(ReaderIntent.ChangeFontScale(5.0f))
 
         assertEquals(1.6f, vm.uiState.value.settings.fontScale, 0.001f)
+    }
+
+    @Test
+    fun `본문 롱프레스는 등록할 표기 후보를 띄운다`() {
+        val vm = viewModel(FakeLibraryRepository(testItem(totalChapters = 5)))
+        vm.start("i0", 1)
+
+        vm.onIntent(ReaderIntent.LongPressSegment("s1"))
+
+        assertEquals(listOf("原文"), (vm.uiState.value.quickEdit as TermQuickEdit.PickWord).words)
+    }
+
+    @Test
+    fun `표기를 고르면 용어 편집으로 넘어간다`() {
+        val vm = viewModel(FakeLibraryRepository(testItem(totalChapters = 5)))
+        vm.start("i0", 1)
+        vm.onIntent(ReaderIntent.LongPressSegment("s1"))
+
+        vm.onIntent(ReaderIntent.PickWord("原文"))
+
+        assertEquals("原文", (vm.uiState.value.quickEdit as TermQuickEdit.Edit).source)
+    }
+
+    @Test
+    fun `저장하면 컬렉션 용어맵에 남고 재번역을 확인한다`() {
+        val vm = viewModel(FakeLibraryRepository(testItem(totalChapters = 5)))
+        vm.start("i0", 1)
+        vm.onIntent(ReaderIntent.LongPressSegment("s1"))
+        vm.onIntent(ReaderIntent.PickWord("原文"))
+
+        vm.onIntent(ReaderIntent.SubmitTerm(translation = "원문", pinned = true))
+
+        val saved = termRepository.current().single()
+        assertEquals("原文", saved.source)
+        assertEquals("원문", saved.translation)
+        assertTrue(saved.pinned)
+        assertEquals("c0", saved.collectionId)
+        assertEquals(TermQuickEdit.ConfirmRetranslate, vm.uiState.value.quickEdit)
+    }
+
+    @Test
+    fun `다시 번역을 고르면 그 화의 캐시를 버리고 본문을 다시 불러온다`() {
+        val vm = viewModel(FakeLibraryRepository(testItem(totalChapters = 5)))
+        vm.start("i0", 3)
+        vm.onIntent(ReaderIntent.LongPressSegment("s1"))
+        vm.onIntent(ReaderIntent.PickWord("原文"))
+        vm.onIntent(ReaderIntent.SubmitTerm("원문", pinned = false))
+        val loadsBefore = chapterContent.getChapterCalls
+
+        vm.onIntent(ReaderIntent.ConfirmRetranslate(retranslate = true))
+
+        assertEquals(listOf("i0" to 3), segmentCache.invalidatedChapters)
+        assertEquals(loadsBefore + 1, chapterContent.getChapterCalls)
+        assertNull(vm.uiState.value.quickEdit)
+    }
+
+    @Test
+    fun `나중에를 고르면 캐시를 건드리지 않는다`() {
+        val vm = viewModel(FakeLibraryRepository(testItem(totalChapters = 5)))
+        vm.start("i0", 1)
+        vm.onIntent(ReaderIntent.LongPressSegment("s1"))
+        vm.onIntent(ReaderIntent.PickWord("原文"))
+        vm.onIntent(ReaderIntent.SubmitTerm("원문", pinned = false))
+
+        vm.onIntent(ReaderIntent.ConfirmRetranslate(retranslate = false))
+
+        assertTrue(segmentCache.invalidatedChapters.isEmpty())
+        assertNull(vm.uiState.value.quickEdit)
     }
 }

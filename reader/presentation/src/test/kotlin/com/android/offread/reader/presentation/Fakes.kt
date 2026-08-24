@@ -12,11 +12,18 @@ import com.android.offread.library.domain.model.TermMapMoveStrategy
 import com.android.offread.reader.domain.ChapterContentRepository
 import com.android.offread.reader.domain.model.ChapterContent
 import com.android.offread.reader.domain.model.ReaderSegment
+import com.android.offread.terms.domain.TermRepository
+import com.android.offread.terms.domain.model.Term
+import com.android.offread.translate.domain.CacheStats
+import com.android.offread.translate.domain.SegmentCache
+import com.android.offread.translate.domain.model.SegmentCacheKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 
 class FakeChapterContentRepository : ChapterContentRepository {
+    var getChapterCalls = 0
+
     override suspend fun getChapter(
         itemId: String,
         chapterIndex: Int,
@@ -24,7 +31,7 @@ class FakeChapterContentRepository : ChapterContentRepository {
         ChapterContent(
             itemId = itemId,
             chapterIndex = chapterIndex,
-            title = "${chapterIndex}화",
+            title = "${chapterIndex}화".also { getChapterCalls++ },
             segments =
                 listOf(
                     ReaderSegment("s1", "原文1", "번역1"),
@@ -111,3 +118,52 @@ fun testItem(
     updatedAt = 0,
     lastReadChapter = 0,
 )
+
+/** 인메모리 [TermRepository] 더블(F-017 용어 빠른편집). */
+class FakeTermRepository : TermRepository {
+    private val terms = MutableStateFlow<List<Term>>(emptyList())
+
+    override fun observeTerms(collectionId: String): Flow<List<Term>> =
+        terms.map { list -> list.filter { it.collectionId == collectionId } }
+
+    override suspend fun upsert(term: Term): String {
+        val id = term.id.ifBlank { "t${terms.value.size}" }
+        terms.value = terms.value + term.copy(id = id)
+        return id
+    }
+
+    override suspend fun delete(id: String) {
+        terms.value = terms.value.filterNot { it.id == id }
+    }
+
+    fun current(): List<Term> = terms.value
+}
+
+/** 무효화 호출을 기록하는 [SegmentCache] 더블. */
+class FakeSegmentCache : SegmentCache {
+    val invalidatedChapters = mutableListOf<Pair<String, Int>>()
+
+    override suspend fun get(key: SegmentCacheKey): String? = null
+
+    override suspend fun put(
+        key: SegmentCacheKey,
+        itemId: String,
+        chapterIndex: Int,
+        translation: String,
+    ) = Unit
+
+    override suspend fun invalidateItem(itemId: String) = Unit
+
+    override suspend fun invalidateChapter(
+        itemId: String,
+        chapterIndex: Int,
+    ) {
+        invalidatedChapters += itemId to chapterIndex
+    }
+
+    override suspend fun invalidateCollection(collectionId: String) = Unit
+
+    override suspend fun stats(): CacheStats = CacheStats.EMPTY
+
+    override suspend fun clear() = Unit
+}

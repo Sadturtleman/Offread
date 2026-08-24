@@ -35,6 +35,9 @@ dependencies {
     implementation(project(":reader:domain"))
     implementation(project(":library:domain"))
     implementation(project(":core:entity"))
+    // F-017: 본문에서 바로 용어를 고치고(terms) 해당 챕터 캐시를 버린다(translate).
+    implementation(project(":terms:domain"))
+    implementation(project(":translate:domain"))
     implementation(project(":core:ui"))
 
     implementation(platform(libs.androidx.compose.bom))

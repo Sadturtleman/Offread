@@ -65,3 +65,33 @@ class TermCandidateExtractorTest {
         assertTrue(candidates.isEmpty())
     }
 }
+
+class TermCandidateExtractorWordsTest {
+    private val extractor = TermCandidateExtractor()
+
+    @Test
+    fun `한 번만 나온 표기도 롱프레스 후보로는 돌려준다`() {
+        val words = extractor.wordsIn("ルーデウスは地図を畳んだ。")
+
+        assertTrue(words.contains("ルーデウス"))
+    }
+
+    @Test
+    fun `카타카나와 한자 덩어리를 모두 고를 수 있다`() {
+        val words = extractor.wordsIn("聖剣アクアを抜いた。")
+
+        assertEquals(listOf("聖剣", "アクア"), words)
+    }
+
+    @Test
+    fun `같은 표기는 한 번만 노출한다`() {
+        val words = extractor.wordsIn("ソフィアとソフィア。")
+
+        assertEquals(listOf("ソフィア"), words)
+    }
+
+    @Test
+    fun `한 글자 표기는 후보가 아니다`() {
+        assertTrue(extractor.wordsIn("彼は。").isEmpty())
+    }
+}
