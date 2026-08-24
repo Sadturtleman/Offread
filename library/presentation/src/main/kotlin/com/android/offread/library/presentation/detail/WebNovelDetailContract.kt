@@ -5,12 +5,16 @@ import com.android.offread.core.ui.mvi.MviIntent
 import com.android.offread.core.ui.mvi.ReducerEvent
 import com.android.offread.core.ui.mvi.UiState
 import com.android.offread.library.domain.model.Chapter
+import com.android.offread.library.domain.model.Collection
 import com.android.offread.library.domain.model.LibraryItem
+import com.android.offread.library.domain.model.TermMapMoveStrategy
 
 data class WebNovelDetailUiState(
     val item: LibraryItem? = null,
     val chapters: List<Chapter> = emptyList(),
     val preparing: Boolean = false,
+    val collections: List<Collection> = emptyList(),
+    val moveDialogVisible: Boolean = false,
 ) : UiState
 
 sealed interface WebNovelDetailIntent : MviIntent {
@@ -19,6 +23,15 @@ sealed interface WebNovelDetailIntent : MviIntent {
     data object ContinueReading : WebNovelDetailIntent
 
     data object CheckForNewChapters : WebNovelDetailIntent
+
+    data object MoveClicked : WebNovelDetailIntent
+
+    data object DismissMoveDialog : WebNovelDetailIntent
+
+    data class SubmitMove(
+        val targetCollectionId: String,
+        val strategy: TermMapMoveStrategy,
+    ) : WebNovelDetailIntent
 }
 
 sealed interface WebNovelDetailEvent : ReducerEvent {
@@ -29,6 +42,14 @@ sealed interface WebNovelDetailEvent : ReducerEvent {
 
     data class Preparing(
         val preparing: Boolean,
+    ) : WebNovelDetailEvent
+
+    data class CollectionsChanged(
+        val collections: List<Collection>,
+    ) : WebNovelDetailEvent
+
+    data class MoveDialogChanged(
+        val visible: Boolean,
     ) : WebNovelDetailEvent
 }
 

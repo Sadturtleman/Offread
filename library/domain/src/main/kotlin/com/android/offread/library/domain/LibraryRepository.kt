@@ -4,6 +4,7 @@ import com.android.offread.core.entity.TranslationStatus
 import com.android.offread.library.domain.model.Collection
 import com.android.offread.library.domain.model.LibraryItem
 import com.android.offread.library.domain.model.LibrarySort
+import com.android.offread.library.domain.model.TermMapMoveStrategy
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -34,6 +35,13 @@ interface LibraryRepository {
 
     /** 아이템 추가. 생성된 id 반환. */
     suspend fun addItem(item: LibraryItem): String
+
+    /** 아이템을 다른 컬렉션으로 이동(F-007). 원 컬렉션 용어맵은 [strategy] 에 따라 처리한다. */
+    suspend fun moveItem(
+        id: String,
+        targetCollectionId: String,
+        strategy: TermMapMoveStrategy,
+    )
 
     /** 아이템 번역 상태 갱신(F-019 배지 전이). */
     suspend fun updateItemTranslationStatus(

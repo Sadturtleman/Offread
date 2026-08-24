@@ -33,6 +33,13 @@ interface ItemDao {
         updatedAt: Long,
     )
 
+    @Query("UPDATE items SET collectionId = :collectionId, updatedAt = :updatedAt WHERE id = :id")
+    suspend fun updateCollection(
+        id: String,
+        collectionId: String,
+        updatedAt: Long,
+    )
+
     @Query("DELETE FROM items WHERE id = :id")
     suspend fun delete(id: String)
 }

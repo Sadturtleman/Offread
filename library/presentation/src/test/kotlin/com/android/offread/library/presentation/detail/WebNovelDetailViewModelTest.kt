@@ -3,18 +3,31 @@ package com.android.offread.library.presentation.detail
 import com.android.offread.core.entity.ItemType
 import com.android.offread.core.entity.SerialStatus
 import com.android.offread.core.entity.TranslationStatus
+import com.android.offread.library.domain.TranslationCache
 import com.android.offread.library.domain.model.LibraryItem
+import com.android.offread.library.domain.model.TermMapMoveStrategy
 import com.android.offread.library.domain.usecase.GetChaptersUseCase
 import com.android.offread.library.domain.usecase.GetItemUseCase
+import com.android.offread.library.domain.usecase.MoveItemUseCase
+import com.android.offread.library.domain.usecase.ObserveCollectionsUseCase
 import com.android.offread.library.domain.usecase.PrepareOfflineUseCase
 import com.android.offread.library.presentation.FakeLibraryRepository
 import com.android.offread.library.presentation.MainDispatcherRule
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+
+private class FakeTranslationCache : TranslationCache {
+    val invalidatedItemIds = mutableListOf<String>()
+
+    override suspend fun invalidateItem(itemId: String) {
+        invalidatedItemIds += itemId
+    }
+}
 
 class WebNovelDetailViewModelTest {
     @get:Rule
@@ -35,8 +48,16 @@ class WebNovelDetailViewModelTest {
             updatedAt = 0,
         )
 
-    private fun viewModel(repo: FakeLibraryRepository) =
-        WebNovelDetailViewModel(GetItemUseCase(repo), GetChaptersUseCase(), PrepareOfflineUseCase(repo))
+    private fun viewModel(
+        repo: FakeLibraryRepository,
+        cache: FakeTranslationCache = FakeTranslationCache(),
+    ) = WebNovelDetailViewModel(
+        GetItemUseCase(repo),
+        GetChaptersUseCase(),
+        PrepareOfflineUseCase(repo),
+        ObserveCollectionsUseCase(repo),
+        MoveItemUseCase(repo, cache),
+    )
 
     @Test
     fun `start 시 아이템과 챕터를 노출한다`() {
@@ -67,6 +88,73 @@ class WebNovelDetailViewModelTest {
                 ?.translationStatus,
         )
     }
+
+    @Test
+    fun `이동 다이얼로그를 열고 닫는다`() {
+        val repo = FakeLibraryRepository().apply { seedItem(item()) }
+        val vm = viewModel(repo)
+        vm.start("i0")
+
+        vm.onIntent(WebNovelDetailIntent.MoveClicked)
+        assertTrue(vm.uiState.value.moveDialogVisible)
+
+        vm.onIntent(WebNovelDetailIntent.DismissMoveDialog)
+        assertFalse(vm.uiState.value.moveDialogVisible)
+    }
+
+    @Test
+    fun `이동하면 아이템 컬렉션이 바뀌고 다이얼로그가 닫히고 캐시가 무효화된다`() =
+        runTest {
+            val repo = FakeLibraryRepository().apply { seedItem(item().copy(collectionId = "shelf")) }
+            val target = repo.createCollection("이세계물", null)
+            val cache = FakeTranslationCache()
+            val vm = viewModel(repo, cache)
+            vm.start("i0")
+            vm.onIntent(WebNovelDetailIntent.MoveClicked)
+
+            vm.onIntent(WebNovelDetailIntent.SubmitMove(target, TermMapMoveStrategy.MOVE))
+
+            assertEquals(
+                target,
+                vm.uiState.value.item
+                    ?.collectionId,
+            )
+            assertFalse(vm.uiState.value.moveDialogVisible)
+            assertEquals(TermMapMoveStrategy.MOVE, repo.lastMoveStrategy)
+            assertEquals(listOf("i0"), cache.invalidatedItemIds)
+        }
+
+    @Test
+    fun `같은 컬렉션으로 이동하면 실패 메시지를 낸다`() =
+        runTest {
+            val repo = FakeLibraryRepository().apply { seedItem(item()) }
+            val vm = viewModel(repo)
+            vm.start("i0")
+            vm.onIntent(WebNovelDetailIntent.MoveClicked)
+
+            vm.onIntent(WebNovelDetailIntent.SubmitMove("c0", TermMapMoveStrategy.LEAVE))
+
+            val effect = vm.effect.first()
+            assertTrue(effect is WebNovelDetailEffect.ShowMessage)
+            assertTrue(vm.uiState.value.moveDialogVisible)
+            assertEquals(
+                "c0",
+                vm.uiState.value.item
+                    ?.collectionId,
+            )
+        }
+
+    @Test
+    fun `start 시 컬렉션 목록을 구독한다`() =
+        runTest {
+            val repo = FakeLibraryRepository().apply { seedItem(item()) }
+            repo.createCollection("판타지", null)
+            val vm = viewModel(repo)
+
+            vm.start("i0")
+
+            assertEquals(1, vm.uiState.value.collections.size)
+        }
 
     @Test
     fun `이어읽기는 리더 열기 이펙트를 낸다`() =
