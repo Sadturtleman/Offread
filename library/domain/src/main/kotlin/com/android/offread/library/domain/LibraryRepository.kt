@@ -4,6 +4,7 @@ import com.android.offread.core.entity.TranslationStatus
 import com.android.offread.library.domain.model.Collection
 import com.android.offread.library.domain.model.LibraryItem
 import com.android.offread.library.domain.model.LibrarySort
+import com.android.offread.library.domain.model.SearchQuery
 import com.android.offread.library.domain.model.TermMapMoveStrategy
 import kotlinx.coroutines.flow.Flow
 
@@ -29,6 +30,9 @@ interface LibraryRepository {
 
     /** 전체 아이템(최근 갱신 순). collectionId 가 있으면 해당 컬렉션만. */
     fun observeItems(collectionId: String? = null): Flow<List<LibraryItem>>
+
+    /** 제목·작가 검색(F-010). 조건은 [SearchQuery] 참고. */
+    fun searchItems(query: SearchQuery): Flow<List<LibraryItem>>
 
     /** 단일 아이템 구독(없으면 null). */
     fun observeItem(id: String): Flow<LibraryItem?>

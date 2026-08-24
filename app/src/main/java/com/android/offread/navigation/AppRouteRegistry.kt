@@ -5,9 +5,11 @@ import com.android.offread.importer.domain.ImportSheetPage
 import com.android.offread.importer.domain.WebNovelImportPage
 import com.android.offread.importer.presentation.sheet.ImportSheetScreen
 import com.android.offread.importer.presentation.webnovel.WebNovelImportScreen
+import com.android.offread.library.domain.SearchPage
 import com.android.offread.library.domain.WebNovelDetailPage
 import com.android.offread.library.presentation.LibraryScreen
 import com.android.offread.library.presentation.detail.WebNovelDetailScreen
+import com.android.offread.library.presentation.search.SearchScreen
 import com.android.offread.onboarding.domain.FirstTranslationPage
 import com.android.offread.onboarding.domain.ModelDownloadPage
 import com.android.offread.onboarding.domain.OnboardingIntroPage
@@ -67,6 +69,10 @@ val appRoutes: List<AppRoute> =
         AppRoute(
             path = WebNovelDetailPage.PATH,
             render = { args -> WebNovelDetailScreen(itemId = args[WebNovelDetailPage.ARG_ITEM_ID].orEmpty()) },
+        ),
+        AppRoute(
+            path = SearchPage.PATH,
+            render = { args -> SearchScreen(collectionId = args[SearchPage.ARG_COLLECTION_ID]) },
         ),
         AppRoute(
             path = ReaderPage.PATH,

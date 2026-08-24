@@ -9,6 +9,7 @@ import com.android.offread.library.domain.LibraryRepository
 import com.android.offread.library.domain.model.Collection
 import com.android.offread.library.domain.model.LibraryItem
 import com.android.offread.library.domain.model.LibrarySort
+import com.android.offread.library.domain.model.SearchQuery
 import com.android.offread.library.domain.model.TermMapMoveStrategy
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -70,6 +71,11 @@ class LibraryRepositoryImpl
             return source.map { list -> list.map { it.toDomain() } }
         }
 
+        override fun searchItems(query: SearchQuery): Flow<List<LibraryItem>> =
+            itemDao
+                .search(query.text.escapeLike(), query.collectionId, query.type?.name)
+                .map { list -> list.map { it.toDomain() } }
+
         override fun observeItem(id: String): Flow<LibraryItem?> = itemDao.observeById(id).map { it?.toDomain() }
 
         override suspend fun addItem(item: LibraryItem): String {
@@ -125,3 +131,9 @@ class LibraryRepositoryImpl
             itemDao.updateReadingProgress(id, lastReadChapter, System.currentTimeMillis())
         }
     }
+
+/** 사용자가 입력한 LIKE 와일드카드를 리터럴로 취급한다(ItemDao.search 의 ESCAPE 와 짝). */
+private fun String.escapeLike(): String =
+    replace("\\", "\\\\")
+        .replace("%", "\\%")
+        .replace("_", "\\_")

@@ -27,6 +27,7 @@ import com.android.offread.core.entity.TranslationStatus
 import com.android.offread.core.ui.helper.LocalMessageHelper
 import com.android.offread.core.ui.helper.LocalNavigationHelper
 import com.android.offread.core.ui.helper.singleClickable
+import com.android.offread.library.domain.SearchPage
 import com.android.offread.library.domain.WebNovelDetailPage
 import com.android.offread.library.domain.model.Collection
 import com.android.offread.library.domain.model.LibraryItem
@@ -65,10 +66,15 @@ fun LibraryScreen(
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                 )
-                TextButton(
-                    onClick = { navigationHelper.navigateByRoute(NavRoute(AppRoutes.SETTINGS_HOME)) },
-                ) {
-                    Text(text = "설정", style = MaterialTheme.typography.labelLarge)
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    TextButton(onClick = { navigationHelper.navigateTo(SearchPage()) }) {
+                        Text(text = "검색", style = MaterialTheme.typography.labelLarge)
+                    }
+                    TextButton(
+                        onClick = { navigationHelper.navigateByRoute(NavRoute(AppRoutes.SETTINGS_HOME)) },
+                    ) {
+                        Text(text = "설정", style = MaterialTheme.typography.labelLarge)
+                    }
                 }
             }
 
