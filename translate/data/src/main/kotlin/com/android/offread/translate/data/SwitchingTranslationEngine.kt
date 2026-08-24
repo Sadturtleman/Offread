@@ -20,6 +20,7 @@ class SwitchingTranslationEngine
         private val preference: TranslationEnginePreference,
         @MlKitEngine private val mlKit: TranslationEngine,
         @LlmEngine private val llm: TranslationEngine,
+        @TranslateGemmaEngine private val translateGemma: TranslationEngine,
     ) : TranslationEngine {
         override suspend fun translate(
             text: String,
@@ -33,5 +34,6 @@ class SwitchingTranslationEngine
             when (preference.selected.first()) {
                 TranslationEngineKind.ML_KIT -> mlKit
                 TranslationEngineKind.ON_DEVICE_LLM -> llm
+                TranslationEngineKind.TRANSLATE_GEMMA -> translateGemma
             }
     }

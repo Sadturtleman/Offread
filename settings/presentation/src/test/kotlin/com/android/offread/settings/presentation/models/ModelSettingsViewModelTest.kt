@@ -3,12 +3,18 @@ package com.android.offread.settings.presentation.models
 import com.android.offread.core.entity.LanguagePair
 import com.android.offread.core.entity.TranslationModel
 import com.android.offread.settings.domain.model.ManagedModel
+import com.android.offread.settings.domain.usecase.DeleteLlmModelUseCase
 import com.android.offread.settings.domain.usecase.DeleteModelUseCase
 import com.android.offread.settings.domain.usecase.DownloadModelUseCase
+import com.android.offread.settings.domain.usecase.ImportLlmModelUseCase
+import com.android.offread.settings.domain.usecase.ObserveLlmModelFilesUseCase
 import com.android.offread.settings.domain.usecase.ObserveManagedModelsUseCase
 import com.android.offread.settings.domain.usecase.ObserveTranslationEngineUseCase
 import com.android.offread.settings.domain.usecase.SelectTranslationEngineUseCase
 import com.android.offread.settings.presentation.MainDispatcherRule
+import com.android.offread.translate.domain.LlmModelFile
+import com.android.offread.translate.domain.LlmModelStore
+import com.android.offread.translate.domain.LlmRuntime
 import com.android.offread.translate.domain.TranslationEnginePreference
 import com.android.offread.translate.domain.TranslationModelRepository
 import com.android.offread.translate.domain.model.ModelDownloadStatus
@@ -72,11 +78,30 @@ private class FakeEnginePreference : TranslationEnginePreference {
     }
 }
 
+private class FakeLlmModelStore : LlmModelStore {
+    val files = mutableListOf<LlmModelFile>()
+    var importError: Throwable? = null
+
+    override suspend fun installed(): List<LlmModelFile> = files.toList()
+
+    override suspend fun import(uri: String): LlmModelFile {
+        importError?.let { throw it }
+        val file = LlmModelFile(uri.substringAfterLast('/'), 2_000_000_000, LlmRuntime.LITERT_LM)
+        files += file
+        return file
+    }
+
+    override suspend fun delete(name: String) {
+        files.removeAll { it.name == name }
+    }
+}
+
 class ModelSettingsViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
     private val enginePreference = FakeEnginePreference()
+    private val llmModelStore = FakeLlmModelStore()
 
     private fun viewModel(repo: FakeModelRepository) =
         ModelSettingsViewModel(
@@ -85,6 +110,9 @@ class ModelSettingsViewModelTest {
             DeleteModelUseCase(repo),
             ObserveTranslationEngineUseCase(enginePreference),
             SelectTranslationEngineUseCase(enginePreference),
+            ObserveLlmModelFilesUseCase(llmModelStore),
+            ImportLlmModelUseCase(llmModelStore),
+            DeleteLlmModelUseCase(llmModelStore),
         )
 
     @Test
@@ -188,5 +216,55 @@ class ModelSettingsViewModelTest {
         vm.onIntent(ModelSettingsIntent.SelectEngine(TranslationEngineKind.ON_DEVICE_LLM))
 
         assertEquals(TranslationEngineKind.ON_DEVICE_LLM, vm.uiState.value.engine)
+    }
+
+    @Test
+    fun `모델 파일을 가져오면 목록에 들어온다`() {
+        val vm = viewModel(FakeModelRepository())
+
+        vm.onIntent(ModelSettingsIntent.ImportLlmModel("content://docs/translategemma-4b-int4.litertlm"))
+
+        assertEquals(
+            listOf("translategemma-4b-int4.litertlm"),
+            vm.uiState.value.llmModels
+                .map { it.name },
+        )
+        assertFalse(vm.uiState.value.importing)
+    }
+
+    @Test
+    fun `가져오기에 실패해도 진행 상태를 되돌린다`() {
+        llmModelStore.importError = IllegalArgumentException("지원하지 않는 형식이에요.")
+        val vm = viewModel(FakeModelRepository())
+
+        vm.onIntent(ModelSettingsIntent.ImportLlmModel("content://docs/model.bin"))
+
+        assertTrue(
+            vm.uiState.value.llmModels
+                .isEmpty(),
+        )
+        assertFalse(vm.uiState.value.importing)
+    }
+
+    @Test
+    fun `모델 파일을 지우면 목록에서 빠진다`() {
+        val vm = viewModel(FakeModelRepository())
+        vm.onIntent(ModelSettingsIntent.ImportLlmModel("content://docs/translategemma-4b-int4.litertlm"))
+
+        vm.onIntent(ModelSettingsIntent.DeleteLlmModel("translategemma-4b-int4.litertlm"))
+
+        assertTrue(
+            vm.uiState.value.llmModels
+                .isEmpty(),
+        )
+    }
+
+    @Test
+    fun `TranslateGemma 를 고를 수 있다`() {
+        val vm = viewModel(FakeModelRepository())
+
+        vm.onIntent(ModelSettingsIntent.SelectEngine(TranslationEngineKind.TRANSLATE_GEMMA))
+
+        assertEquals(TranslationEngineKind.TRANSLATE_GEMMA, vm.uiState.value.engine)
     }
 }

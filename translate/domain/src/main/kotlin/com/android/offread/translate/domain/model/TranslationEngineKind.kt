@@ -15,8 +15,18 @@ enum class TranslationEngineKind {
      * 용어맵을 프롬프트로 주입할 수 있어 캐논 번역 일관성이 높다.
      */
     ON_DEVICE_LLM,
+
+    /**
+     * TranslateGemma 4B(LiteRT-LM 런타임). 번역 전용으로 학습돼 품질이 가장 좋다.
+     * 프롬프트가 `<src>/<dst>/<text>` 태그 형식으로 고정돼 **용어 지시문을 넣을 자리가 없다** —
+     * 용어맵은 후처리 치환으로만 보장된다. 모델 파일(~2GB, RAM 6GB+)을 직접 가져와야 한다.
+     */
+    TRANSLATE_GEMMA,
     ;
 
     /** 프롬프트로 용어맵을 주입할 수 있는 엔진인지. */
     val supportsGlossaryPrompt: Boolean get() = this == ON_DEVICE_LLM
+
+    /** 사용자가 모델 파일을 직접 넣어야 하는 엔진인지. */
+    val requiresModelFile: Boolean get() = this == ON_DEVICE_LLM || this == TRANSLATE_GEMMA
 }

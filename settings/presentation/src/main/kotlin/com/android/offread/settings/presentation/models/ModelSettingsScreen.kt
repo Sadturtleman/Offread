@@ -1,5 +1,7 @@
 package com.android.offread.settings.presentation.models
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,6 +31,8 @@ import com.android.offread.core.entity.Language
 import com.android.offread.core.entity.LanguagePair
 import com.android.offread.core.ui.helper.LocalMessageHelper
 import com.android.offread.settings.domain.model.ManagedModel
+import com.android.offread.translate.domain.LlmModelFile
+import com.android.offread.translate.domain.LlmRuntime
 import com.android.offread.translate.domain.model.ModelDownloadStatus
 import com.android.offread.translate.domain.model.TranslationEngineKind
 
@@ -64,6 +68,15 @@ fun ModelSettingsScreen(
             selected = state.engine,
             onSelect = { viewModel.onIntent(ModelSettingsIntent.SelectEngine(it)) },
         )
+
+        if (state.engine.requiresModelFile) {
+            LlmModelSection(
+                files = state.llmModels,
+                importing = state.importing,
+                onImport = { viewModel.onIntent(ModelSettingsIntent.ImportLlmModel(it)) },
+                onDelete = { viewModel.onIntent(ModelSettingsIntent.DeleteLlmModel(it)) },
+            )
+        }
 
         Text(
             text = "언어쌍별 모델",
@@ -137,6 +150,7 @@ internal fun TranslationEngineKind.label(): String =
     when (this) {
         TranslationEngineKind.ML_KIT -> "ML Kit"
         TranslationEngineKind.ON_DEVICE_LLM -> "온디바이스 LLM"
+        TranslationEngineKind.TRANSLATE_GEMMA -> "TranslateGemma 4B"
     }
 
 private fun TranslationEngineKind.description(): String =
@@ -144,8 +158,71 @@ private fun TranslationEngineKind.description(): String =
         TranslationEngineKind.ML_KIT ->
             "언어쌍당 약 30MB 모델을 자동으로 받아 바로 번역해요. 가볍지만 용어맵은 번역 후 치환으로만 반영돼요."
         TranslationEngineKind.ON_DEVICE_LLM ->
-            "앱 전용 저장소 llm 폴더의 .task 또는 .litertlm 모델을 써요. 용어맵을 프롬프트로 넣어 " +
-                "일관성이 높지만 모델 파일을 직접 넣어야 해요."
+            "가져온 .task 모델(MediaPipe)로 번역해요. 용어맵을 프롬프트로 넣어 일관성이 높아요."
+        TranslationEngineKind.TRANSLATE_GEMMA ->
+            "가져온 .litertlm 모델(TranslateGemma 4B)로 번역해요. 번역 전용 모델이라 품질이 가장 좋아요. " +
+                "INT4 기준 약 2GB · RAM 6GB 이상 권장이고, 프롬프트 형식이 고정이라 용어맵은 번역 후 치환으로 반영돼요."
+    }
+
+/**
+ * 모델 파일 가져오기(F-020). Gemma 계열 가중치는 라이선스 동의가 필요한 gated 배포물이라
+ * 앱이 대신 내려받지 않는다 — 사용자가 받아 둔 파일을 SAF 로 골라 앱 저장소로 복사한다.
+ */
+@Composable
+private fun LlmModelSection(
+    files: List<LlmModelFile>,
+    importing: Boolean,
+    onImport: (String) -> Unit,
+    onDelete: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val picker =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let { onImport(it.toString()) }
+        }
+
+    ElevatedCard(modifier = modifier.fillMaxWidth().padding(top = 12.dp)) {
+        Column(modifier = Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(text = "모델 파일", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            if (files.isEmpty()) {
+                Text(
+                    text = "가져온 모델이 없어요. 내려받은 .task 또는 .litertlm 파일을 골라 주세요.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                files.forEach { file ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(text = file.name, style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                text = "${formatSize(file.sizeBytes)} · ${file.runtime.label()}",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        TextButton(onClick = { onDelete(file.name) }) { Text("삭제") }
+                    }
+                }
+            }
+            OutlinedButton(
+                onClick = { picker.launch(arrayOf("*/*")) },
+                enabled = !importing,
+            ) {
+                Text(if (importing) "가져오는 중…" else "모델 파일 가져오기")
+            }
+        }
+    }
+}
+
+private fun LlmRuntime.label(): String =
+    when (this) {
+        LlmRuntime.MEDIAPIPE_TASK -> "MediaPipe"
+        LlmRuntime.LITERT_LM -> "LiteRT-LM"
     }
 
 @Composable

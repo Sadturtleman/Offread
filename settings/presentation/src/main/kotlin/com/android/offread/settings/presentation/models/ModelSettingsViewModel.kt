@@ -2,8 +2,11 @@ package com.android.offread.settings.presentation.models
 
 import androidx.lifecycle.viewModelScope
 import com.android.offread.core.ui.mvi.MviViewModel
+import com.android.offread.settings.domain.usecase.DeleteLlmModelUseCase
 import com.android.offread.settings.domain.usecase.DeleteModelUseCase
 import com.android.offread.settings.domain.usecase.DownloadModelUseCase
+import com.android.offread.settings.domain.usecase.ImportLlmModelUseCase
+import com.android.offread.settings.domain.usecase.ObserveLlmModelFilesUseCase
 import com.android.offread.settings.domain.usecase.ObserveManagedModelsUseCase
 import com.android.offread.settings.domain.usecase.ObserveTranslationEngineUseCase
 import com.android.offread.settings.domain.usecase.SelectTranslationEngineUseCase
@@ -24,6 +27,9 @@ class ModelSettingsViewModel
         private val deleteModel: DeleteModelUseCase,
         private val observeTranslationEngine: ObserveTranslationEngineUseCase,
         private val selectTranslationEngine: SelectTranslationEngineUseCase,
+        private val observeLlmModelFiles: ObserveLlmModelFilesUseCase,
+        private val importLlmModel: ImportLlmModelUseCase,
+        private val deleteLlmModel: DeleteLlmModelUseCase,
     ) : MviViewModel<ModelSettingsIntent, ModelSettingsUiState, ModelSettingsEvent, ModelSettingsEffect>(
             ModelSettingsUiState(),
         ) {
@@ -38,6 +44,11 @@ class ModelSettingsViewModel
                     dispatch(ModelSettingsEvent.EngineChanged(kind))
                 }
             }
+            refreshLlmModels()
+        }
+
+        private fun refreshLlmModels() {
+            viewModelScope.launch { dispatch(ModelSettingsEvent.LlmModelsChanged(observeLlmModelFiles())) }
         }
 
         override fun onIntent(intent: ModelSettingsIntent) {
@@ -47,6 +58,13 @@ class ModelSettingsViewModel
                         selectTranslationEngine(intent.kind)
                         emitEffect(ModelSettingsEffect.ShowMessage("다음 번역부터 새 엔진을 써요."))
                     }
+                is ModelSettingsIntent.ImportLlmModel -> importModel(intent.uri)
+                is ModelSettingsIntent.DeleteLlmModel ->
+                    viewModelScope.launch {
+                        deleteLlmModel(intent.name)
+                        dispatch(ModelSettingsEvent.LlmModelsChanged(observeLlmModelFiles()))
+                        emitEffect(ModelSettingsEffect.ShowMessage("모델 파일을 지웠어요."))
+                    }
                 is ModelSettingsIntent.Download ->
                     viewModelScope.launch {
                         downloadModel(intent.model.model)
@@ -55,6 +73,22 @@ class ModelSettingsViewModel
                 is ModelSettingsIntent.DeleteClicked -> dispatch(ModelSettingsEvent.DeleteTargetChanged(intent.model))
                 ModelSettingsIntent.DismissDelete -> dispatch(ModelSettingsEvent.DeleteTargetChanged(null))
                 ModelSettingsIntent.ConfirmDelete -> confirmDelete()
+            }
+        }
+
+        /** 수 GB 복사라 진행 상태를 노출한다. */
+        private fun importModel(uri: String) {
+            if (currentState.importing) return
+            viewModelScope.launch {
+                dispatch(ModelSettingsEvent.Importing(true))
+                importLlmModel(uri)
+                    .onSuccess { file ->
+                        dispatch(ModelSettingsEvent.LlmModelsChanged(observeLlmModelFiles()))
+                        emitEffect(ModelSettingsEffect.ShowMessage("${file.name} 을 가져왔어요."))
+                    }.onFailure {
+                        emitEffect(ModelSettingsEffect.ShowMessage(it.message ?: "모델을 가져오지 못했어요."))
+                    }
+                dispatch(ModelSettingsEvent.Importing(false))
             }
         }
 
@@ -73,6 +107,8 @@ class ModelSettingsViewModel
         ): ModelSettingsUiState =
             when (event) {
                 is ModelSettingsEvent.EngineChanged -> state.copy(engine = event.kind)
+                is ModelSettingsEvent.LlmModelsChanged -> state.copy(llmModels = event.files)
+                is ModelSettingsEvent.Importing -> state.copy(importing = event.importing)
                 is ModelSettingsEvent.ModelsChanged -> state.copy(models = event.models)
                 is ModelSettingsEvent.DeleteTargetChanged -> state.copy(deleteTarget = event.model)
             }
