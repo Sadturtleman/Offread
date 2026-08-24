@@ -5,6 +5,7 @@ import com.android.offread.library.domain.LibraryRepository
 import com.android.offread.reader.domain.ChapterContentRepository
 import com.android.offread.reader.domain.model.ChapterContent
 import com.android.offread.reader.domain.model.ReaderSegment
+import com.android.offread.translate.domain.ChapterTextSource
 import com.android.offread.translate.domain.SegmentSplitter
 import com.android.offread.translate.domain.model.TranslationRequest
 import com.android.offread.translate.domain.usecase.TranslateChapterUseCase
@@ -16,12 +17,13 @@ import javax.inject.Inject
  * [ChapterContentRepository] 어댑터(F-015). 원문을 세그먼트로 쪼개 번역 파이프라인(F-020)에 태운다.
  * 캐시가 있으면 추론 없이 즉시 돌아온다(F-021).
  *
- * 원문 수집은 아직 스텁이다([StubChapterSource]) — 실제 수집은 F-012 인프라 태스크.
+ * 원문 수집은 아직 스텁이다([StubChapterTextSource]) — 실제 수집은 F-012 인프라 태스크.
  */
 class ChapterContentRepositoryImpl
     @Inject
     constructor(
         private val libraryRepository: LibraryRepository,
+        private val chapterTextSource: ChapterTextSource,
         private val splitter: SegmentSplitter,
         private val translateChapter: TranslateChapterUseCase,
         private val translateSegment: TranslateSegmentUseCase,
@@ -31,7 +33,7 @@ class ChapterContentRepositoryImpl
             chapterIndex: Int,
         ): ChapterContent {
             val collectionId = collectionIdOf(itemId)
-            val segments = splitter.split(StubChapterSource.text(chapterIndex))
+            val segments = splitter.split(chapterTextSource.text(itemId, chapterIndex))
             val translated =
                 translateChapter(
                     TranslationRequest(
@@ -45,7 +47,7 @@ class ChapterContentRepositoryImpl
             return ChapterContent(
                 itemId = itemId,
                 chapterIndex = chapterIndex,
-                title = StubChapterSource.title(chapterIndex),
+                title = chapterTextSource.title(chapterIndex),
                 segments = translated.map { ReaderSegment(it.id, it.original, it.translated) },
             )
         }
@@ -57,7 +59,7 @@ class ChapterContentRepositoryImpl
         ): String {
             val segment =
                 splitter
-                    .split(StubChapterSource.text(chapterIndex))
+                    .split(chapterTextSource.text(itemId, chapterIndex))
                     .firstOrNull { it.id == segmentId }
                     ?: error("다시 시도할 문단을 찾지 못했어요.")
             val result =

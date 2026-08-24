@@ -90,6 +90,9 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.hilt.android)
+    // F-022: 선번역 워커에 주입하려면 앱이 WorkManager 설정을 직접 제공해야 한다.
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.androidx.hilt.work)
     implementation(libs.androidx.hilt.navigation.compose)
     ksp(libs.hilt.compiler)
 

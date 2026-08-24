@@ -96,9 +96,15 @@ class WebNovelDetailViewModel
             if (currentState.preparing || itemId.isEmpty()) return
             viewModelScope.launch {
                 dispatch(WebNovelDetailEvent.Preparing(true))
-                prepareOffline(itemId)
+                val scheduled = prepareOffline(itemId)
                 dispatch(WebNovelDetailEvent.Preparing(false))
-                emitEffect(WebNovelDetailEffect.ShowMessage("다음 화를 오프라인용으로 준비했어요."))
+                val message =
+                    if (scheduled > 0) {
+                        "다음 ${scheduled}화를 오프라인용으로 준비하고 있어요."
+                    } else {
+                        "미리 준비할 새 화가 없어요."
+                    }
+                emitEffect(WebNovelDetailEffect.ShowMessage(message))
             }
         }
 

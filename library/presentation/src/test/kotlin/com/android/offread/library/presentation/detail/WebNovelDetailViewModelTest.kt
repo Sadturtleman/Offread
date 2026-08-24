@@ -15,6 +15,8 @@ import com.android.offread.library.domain.usecase.PrepareOfflineUseCase
 import com.android.offread.library.domain.usecase.RefreshChaptersUseCase
 import com.android.offread.library.presentation.FakeLibraryRepository
 import com.android.offread.library.presentation.MainDispatcherRule
+import com.android.offread.translate.domain.PretranslateRequest
+import com.android.offread.translate.domain.PretranslateScheduler
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -28,6 +30,16 @@ private class FakeChapterSource(
     var error: Throwable? = null,
 ) : ChapterSource {
     override suspend fun fetchTotalChapters(sourceUrl: String): Int = error?.let { throw it } ?: totalChapters
+}
+
+private class FakePretranslateScheduler : PretranslateScheduler {
+    val scheduled = mutableListOf<PretranslateRequest>()
+
+    override fun schedule(request: PretranslateRequest) {
+        scheduled += request
+    }
+
+    override fun cancel(itemId: String) = Unit
 }
 
 private class FakeTranslationCache : TranslationCache {
@@ -57,6 +69,8 @@ class WebNovelDetailViewModelTest {
             updatedAt = 0,
         )
 
+    private val scheduler = FakePretranslateScheduler()
+
     private fun viewModel(
         repo: FakeLibraryRepository,
         cache: FakeTranslationCache = FakeTranslationCache(),
@@ -64,7 +78,7 @@ class WebNovelDetailViewModelTest {
     ) = WebNovelDetailViewModel(
         GetItemUseCase(repo),
         GetChaptersUseCase(),
-        PrepareOfflineUseCase(repo),
+        PrepareOfflineUseCase(repo, scheduler),
         ObserveCollectionsUseCase(repo),
         MoveItemUseCase(repo, cache),
         RefreshChaptersUseCase(repo, source),
@@ -86,18 +100,22 @@ class WebNovelDetailViewModelTest {
     }
 
     @Test
-    fun `오프라인 준비 시 번역 상태가 캐시됨으로 바뀐다`() {
+    fun `오프라인 준비는 다음 화들을 선번역 큐에 넣고 배지를 번역 중으로 바꾼다`() {
         val repo = FakeLibraryRepository().apply { seedItem(item()) }
         val vm = viewModel(repo)
         vm.start("i0")
 
         vm.onIntent(WebNovelDetailIntent.PrepareOffline)
 
+        val request = scheduler.scheduled.single()
+        assertEquals(1, request.fromChapter)
+        assertEquals(5, request.count)
         assertEquals(
-            TranslationStatus.CACHED,
+            TranslationStatus.TRANSLATING,
             vm.uiState.value.item
                 ?.translationStatus,
         )
+        assertFalse(vm.uiState.value.preparing)
     }
 
     @Test

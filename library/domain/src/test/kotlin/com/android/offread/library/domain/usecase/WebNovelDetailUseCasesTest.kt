@@ -46,15 +46,4 @@ class WebNovelDetailUseCasesTest {
 
             assertEquals("무직전생", GetItemUseCase(repo)("i7").first()?.title)
         }
-
-    @Test
-    fun `오프라인 준비는 번역 상태를 캐시됨으로 전이한다`() =
-        runTest {
-            val repo = FakeLibraryRepository()
-            repo.seedItem(item(id = "i9", status = TranslationStatus.UNTRANSLATED))
-
-            PrepareOfflineUseCase(repo)("i9")
-
-            assertEquals(TranslationStatus.CACHED, GetItemUseCase(repo)("i9").first()?.translationStatus)
-        }
 }
