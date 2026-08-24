@@ -39,7 +39,12 @@ private class NamedEngine(
 class SwitchingTranslationEngineTest {
     private val preference = FakePreference()
     private val engine =
-        SwitchingTranslationEngine(preference, NamedEngine("mlkit"), NamedEngine("llm"))
+        SwitchingTranslationEngine(
+            preference,
+            NamedEngine("mlkit"),
+            NamedEngine("llm"),
+            NamedEngine("translategemma"),
+        )
 
     @Test
     fun `기본값은 ML Kit 이다`() =
@@ -66,8 +71,25 @@ class SwitchingTranslationEngineTest {
         }
 
     @Test
+    fun `TranslateGemma 를 고르면 그 엔진으로 넘어간다`() =
+        runTest {
+            preference.select(TranslationEngineKind.TRANSLATE_GEMMA)
+
+            assertEquals("translategemma:原文", engine.translate("原文", LanguagePair.JA_KO, emptyList()))
+        }
+
+    @Test
+    fun `모델 파일이 필요한 엔진을 구분한다`() {
+        assertEquals(false, TranslationEngineKind.ML_KIT.requiresModelFile)
+        assertEquals(true, TranslationEngineKind.ON_DEVICE_LLM.requiresModelFile)
+        assertEquals(true, TranslationEngineKind.TRANSLATE_GEMMA.requiresModelFile)
+    }
+
+    @Test
     fun `LLM 만 프롬프트 용어 주입을 지원한다`() {
         assertEquals(false, TranslationEngineKind.ML_KIT.supportsGlossaryPrompt)
         assertEquals(true, TranslationEngineKind.ON_DEVICE_LLM.supportsGlossaryPrompt)
+        // TranslateGemma 는 태그 형식이 고정이라 프롬프트로 용어를 넣을 자리가 없다.
+        assertEquals(false, TranslationEngineKind.TRANSLATE_GEMMA.supportsGlossaryPrompt)
     }
 }

@@ -11,3 +11,8 @@ annotation class MlKitEngine
 @Qualifier
 @Retention(AnnotationRetention.BINARY)
 annotation class LlmEngine
+
+/** TranslateGemma(LiteRT-LM) 어댑터. */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class TranslateGemmaEngine

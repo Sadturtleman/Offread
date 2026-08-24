@@ -43,6 +43,7 @@ dependencies {
     // F-020 온디바이스 번역 엔진
     implementation(libs.mlkit.translate)
     implementation(libs.mediapipe.tasks.genai)
+    implementation(libs.litertlm.android)
 
     // F-022 선번역 큐
     implementation(libs.androidx.work.runtime)

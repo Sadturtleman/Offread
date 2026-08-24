@@ -69,3 +69,34 @@ class SelectTranslationEngineUseCase
     ) {
         suspend operator fun invoke(kind: com.android.offread.translate.domain.model.TranslationEngineKind) = preference.select(kind)
     }
+
+/** F-020: 기기에 들어와 있는 LLM 모델 파일 목록. */
+class ObserveLlmModelFilesUseCase
+    @Inject
+    constructor(
+        private val store: com.android.offread.translate.domain.LlmModelStore,
+    ) {
+        suspend operator fun invoke(): List<com.android.offread.translate.domain.LlmModelFile> = store.installed()
+    }
+
+/**
+ * F-020: 사용자가 받아 둔 모델 파일을 앱 저장소로 가져온다.
+ * Gemma 계열 가중치는 라이선스 동의가 필요한 gated 배포물이라 앱이 대신 내려받지 않는다.
+ */
+class ImportLlmModelUseCase
+    @Inject
+    constructor(
+        private val store: com.android.offread.translate.domain.LlmModelStore,
+    ) {
+        suspend operator fun invoke(uri: String): Result<com.android.offread.translate.domain.LlmModelFile> =
+            runCatching { store.import(uri) }
+    }
+
+/** F-020: 모델 파일 삭제(용량 회수). */
+class DeleteLlmModelUseCase
+    @Inject
+    constructor(
+        private val store: com.android.offread.translate.domain.LlmModelStore,
+    ) {
+        suspend operator fun invoke(name: String) = store.delete(name)
+    }

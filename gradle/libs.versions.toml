@@ -21,6 +21,7 @@ work = "2.11.0"
 # 온디바이스 번역 엔진 (F-020)
 mlkitTranslate = "17.0.3"
 mediapipeTasksGenai = "0.10.27"
+litertLm = "0.9.0-beta"
 
 # async / serialization
 coroutines = "1.10.2"
@@ -77,6 +78,7 @@ androidx-work-runtime = { group = "androidx.work", name = "work-runtime-ktx", ve
 # 온디바이스 번역 엔진 (F-020)
 mlkit-translate = { group = "com.google.mlkit", name = "translate", version.ref = "mlkitTranslate" }
 mediapipe-tasks-genai = { group = "com.google.mediapipe", name = "tasks-genai", version.ref = "mediapipeTasksGenai" }
+litertlm-android = { group = "com.google.ai.edge.litertlm", name = "litertlm-android", version.ref = "litertLm" }
 
 # async / serialization
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }

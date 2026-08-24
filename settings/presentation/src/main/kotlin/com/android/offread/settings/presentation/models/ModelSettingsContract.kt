@@ -5,11 +5,14 @@ import com.android.offread.core.ui.mvi.MviIntent
 import com.android.offread.core.ui.mvi.ReducerEvent
 import com.android.offread.core.ui.mvi.UiState
 import com.android.offread.settings.domain.model.ManagedModel
+import com.android.offread.translate.domain.LlmModelFile
 import com.android.offread.translate.domain.model.TranslationEngineKind
 
 data class ModelSettingsUiState(
     val engine: TranslationEngineKind = TranslationEngineKind.ML_KIT,
     val models: List<ManagedModel> = emptyList(),
+    val llmModels: List<LlmModelFile> = emptyList(),
+    val importing: Boolean = false,
     /** 삭제 확인 대상(모델 id). */
     val deleteTarget: ManagedModel? = null,
 ) : UiState {
@@ -20,6 +23,15 @@ data class ModelSettingsUiState(
 sealed interface ModelSettingsIntent : MviIntent {
     data class SelectEngine(
         val kind: TranslationEngineKind,
+    ) : ModelSettingsIntent
+
+    /** SAF 로 고른 모델 파일을 가져온다. */
+    data class ImportLlmModel(
+        val uri: String,
+    ) : ModelSettingsIntent
+
+    data class DeleteLlmModel(
+        val name: String,
     ) : ModelSettingsIntent
 
     data class Download(
@@ -38,6 +50,14 @@ sealed interface ModelSettingsIntent : MviIntent {
 sealed interface ModelSettingsEvent : ReducerEvent {
     data class EngineChanged(
         val kind: TranslationEngineKind,
+    ) : ModelSettingsEvent
+
+    data class LlmModelsChanged(
+        val files: List<LlmModelFile>,
+    ) : ModelSettingsEvent
+
+    data class Importing(
+        val importing: Boolean,
     ) : ModelSettingsEvent
 
     data class ModelsChanged(

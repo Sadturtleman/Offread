@@ -2,6 +2,7 @@ package com.android.offread.translate.data
 
 import android.content.Context
 import com.android.offread.core.entity.LanguagePair
+import com.android.offread.translate.domain.LlmRuntime
 import com.android.offread.translate.domain.TranslationEngine
 import com.android.offread.translate.domain.TranslationPromptBuilder
 import com.android.offread.translate.domain.model.GlossaryEntry
@@ -19,7 +20,7 @@ import javax.inject.Singleton
 /**
  * 온디바이스 LLM 번역 어댑터(F-020, MediaPipe LLM Inference).
  *
- * 앱 전용 저장소의 [MODEL_DIR] 에 있는 `.task`/`.litertlm` 모델을 쓴다. 모델 파일은 라이선스
+ * 앱 전용 저장소(files/llm)의 `.task` 모델을 쓴다. 모델 파일은 라이선스
  * 동의가 필요한 배포물이라 앱이 임의로 받아오지 않는다 — 배포 경로가 정해지면(#32) 그때
  * 다운로드가 이 위치를 채우고, 그전까지는 파일을 직접 넣어 시험한다.
  *
@@ -62,7 +63,7 @@ class LlmTranslationEngine
 
         private suspend fun loadedModel(): LoadedModel =
             mutex.withLock {
-                val file = modelFile() ?: throw MissingLlmModelException(modelDir().absolutePath)
+                val file = modelFile() ?: throw MissingLlmModelException(LlmRuntime.MEDIAPIPE_TASK)
                 loaded?.takeIf { it.path == file.absolutePath && it.size == file.length() }?.let { return it }
                 loaded?.inference?.close()
                 val inference =
@@ -79,12 +80,8 @@ class LlmTranslationEngine
                 LoadedModel(inference, file.absolutePath, file.length()).also { loaded = it }
             }
 
-        private fun modelDir(): File = File(context.filesDir, MODEL_DIR)
-
         private fun modelFile(): File? =
-            modelDir()
-                .listFiles { file -> file.isFile && MODEL_EXTENSIONS.any { file.name.endsWith(it) } }
-                ?.maxByOrNull { it.lastModified() }
+            LlmModelDirectory(File(context.filesDir, LlmModelDirectory.DIR_NAME)).latest(LlmRuntime.MEDIAPIPE_TASK)
 
         private data class LoadedModel(
             val inference: LlmInference,
@@ -93,15 +90,17 @@ class LlmTranslationEngine
         )
 
         private companion object {
-            const val MODEL_DIR = "llm"
-            val MODEL_EXTENSIONS = listOf(".task", ".litertlm")
-
             /** 웹소설 한 문단 + 용어 프롬프트를 감당할 정도. 모델 메모리와 직결된다. */
             const val MAX_TOKENS = 2048
         }
     }
 
-/** 온디바이스 LLM 모델 파일이 없을 때. */
+/** 고른 엔진이 쓸 모델 파일이 없을 때. */
 class MissingLlmModelException(
-    modelDirPath: String,
-) : IllegalStateException("번역 모델 파일이 없어요. $modelDirPath 에 .task 또는 .litertlm 파일을 넣어 주세요.")
+    runtime: LlmRuntime,
+) : IllegalStateException(
+        when (runtime) {
+            LlmRuntime.MEDIAPIPE_TASK -> "번역 모델 파일이 없어요. 설정에서 .task 모델을 가져와 주세요."
+            LlmRuntime.LITERT_LM -> "TranslateGemma 모델 파일이 없어요. 설정에서 .litertlm 모델을 가져와 주세요."
+        },
+    )
