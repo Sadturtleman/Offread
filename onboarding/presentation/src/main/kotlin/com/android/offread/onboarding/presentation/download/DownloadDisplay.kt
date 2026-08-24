@@ -1,6 +1,6 @@
 package com.android.offread.onboarding.presentation.download
 
-import com.android.offread.onboarding.domain.model.ModelDownloadStatus
+import com.android.offread.translate.domain.model.ModelDownloadStatus
 
 /** 진행 카드 하단 보조 문구: "42% · 남은 시간 4분 · 12.4MB/s" 형태. */
 internal fun ModelDownloadStatus.progressLine(): String =

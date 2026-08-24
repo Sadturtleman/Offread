@@ -2,8 +2,8 @@ package com.android.offread.onboarding.presentation
 
 import com.android.offread.core.entity.LanguagePair
 import com.android.offread.core.entity.TranslationModel
-import com.android.offread.onboarding.domain.TranslationModelRepository
-import com.android.offread.onboarding.domain.model.ModelDownloadStatus
+import com.android.offread.translate.domain.TranslationModelRepository
+import com.android.offread.translate.domain.model.ModelDownloadStatus
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,6 +18,7 @@ class FakeTranslationModelRepository(
     val enqueued = mutableListOf<TranslationModel>()
     val paused = mutableListOf<String>()
     val resumed = mutableListOf<String>()
+    val deleted = mutableListOf<String>()
 
     override fun catalogFor(pairs: Set<LanguagePair>): List<TranslationModel> =
         pairs.filter { it.isSelectable }.map { pair ->
@@ -41,6 +42,13 @@ class FakeTranslationModelRepository(
 
     override suspend fun pause(modelId: String) {
         paused += modelId
+    }
+
+    override suspend fun delete(modelId: String) {
+        deleted += modelId
+        installedState.value =
+            installedState.value.filterNot { pair -> "model-${pair.name.lowercase()}" == modelId }.toSet()
+        downloads.value = downloads.value - modelId
     }
 
     override suspend fun resume(modelId: String) {

@@ -1,4 +1,4 @@
-package com.android.offread.onboarding.data
+package com.android.offread.translate.data
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -6,8 +6,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.android.offread.core.entity.LanguagePair
 import com.android.offread.core.entity.TranslationModel
-import com.android.offread.onboarding.domain.TranslationModelRepository
-import com.android.offread.onboarding.domain.model.ModelDownloadStatus
+import com.android.offread.translate.domain.TranslationModelRepository
+import com.android.offread.translate.domain.model.ModelDownloadStatus
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -68,6 +68,16 @@ class TranslationModelRepositoryImpl
 
         override suspend fun resume(modelId: String) {
             pausedIds.update { it - modelId }
+        }
+
+        override suspend fun delete(modelId: String) {
+            jobs.remove(modelId)?.cancel()
+            pausedIds.update { it - modelId }
+            downloads.update { it - modelId }
+            val pair = ModelCatalog.pairOf(modelId) ?: return
+            dataStore.edit { prefs ->
+                prefs[KEY_INSTALLED] = prefs[KEY_INSTALLED].orEmpty() - pair.name
+            }
         }
 
         private suspend fun simulateDownload(model: TranslationModel) {

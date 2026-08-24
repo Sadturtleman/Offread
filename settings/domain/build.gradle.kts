@@ -16,6 +16,8 @@ kotlin {
 dependencies {
     api(project(":core:entity"))
     api(project(":core:domain"))
+    // F-029: 번역 모델 카탈로그·다운로드 포트
+    api(project(":translate:domain"))
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.javax.inject)
 

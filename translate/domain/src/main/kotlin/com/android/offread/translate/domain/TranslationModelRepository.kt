@@ -1,8 +1,8 @@
-package com.android.offread.onboarding.domain
+package com.android.offread.translate.domain
 
 import com.android.offread.core.entity.LanguagePair
 import com.android.offread.core.entity.TranslationModel
-import com.android.offread.onboarding.domain.model.ModelDownloadStatus
+import com.android.offread.translate.domain.model.ModelDownloadStatus
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -24,4 +24,7 @@ interface TranslationModelRepository {
     suspend fun pause(modelId: String)
 
     suspend fun resume(modelId: String)
+
+    /** 설치된 모델을 지운다(F-029 언어쌍별 삭제). 진행 중이던 다운로드도 함께 취소한다. */
+    suspend fun delete(modelId: String)
 }

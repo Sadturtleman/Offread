@@ -5,7 +5,7 @@ import com.android.offread.core.ui.mvi.MviEffect
 import com.android.offread.core.ui.mvi.MviIntent
 import com.android.offread.core.ui.mvi.ReducerEvent
 import com.android.offread.core.ui.mvi.UiState
-import com.android.offread.onboarding.domain.model.ModelDownloadStatus
+import com.android.offread.translate.domain.model.ModelDownloadStatus
 
 /** 화면에 표시할 모델 1개의 다운로드 항목. */
 data class ModelDownloadItem(

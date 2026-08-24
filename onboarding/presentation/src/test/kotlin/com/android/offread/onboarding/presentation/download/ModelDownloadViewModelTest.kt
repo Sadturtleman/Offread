@@ -1,7 +1,6 @@
 package com.android.offread.onboarding.presentation.download
 
 import com.android.offread.core.entity.LanguagePair
-import com.android.offread.onboarding.domain.model.ModelDownloadStatus
 import com.android.offread.onboarding.domain.usecase.CompleteOnboardingUseCase
 import com.android.offread.onboarding.domain.usecase.EnqueueModelDownloadsUseCase
 import com.android.offread.onboarding.domain.usecase.ObserveModelDownloadsUseCase
@@ -11,6 +10,7 @@ import com.android.offread.onboarding.domain.usecase.ResumeModelDownloadUseCase
 import com.android.offread.onboarding.presentation.FakeOnboardingRepository
 import com.android.offread.onboarding.presentation.FakeTranslationModelRepository
 import com.android.offread.onboarding.presentation.MainDispatcherRule
+import com.android.offread.translate.domain.model.ModelDownloadStatus
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals

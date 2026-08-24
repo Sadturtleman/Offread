@@ -11,6 +11,13 @@ object SettingsHomePage : Page {
     override fun toRoute(): NavRoute = NavRoute(PATH)
 }
 
+/** S-02 엔진·모델 관리(F-029). */
+object ModelSettingsPage : Page {
+    const val PATH = AppRoutes.SETTINGS_MODELS
+
+    override fun toRoute(): NavRoute = NavRoute(PATH)
+}
+
 /** S-03 표시 설정(F-030). */
 object DisplaySettingsPage : Page {
     const val PATH = AppRoutes.SETTINGS_DISPLAY
