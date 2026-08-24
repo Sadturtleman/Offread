@@ -1,51 +1,52 @@
 package com.android.offread.reader.data
 
+import com.android.offread.core.entity.LanguagePair
+import com.android.offread.library.domain.LibraryRepository
 import com.android.offread.reader.domain.ChapterContentRepository
 import com.android.offread.reader.domain.model.ChapterContent
 import com.android.offread.reader.domain.model.ReaderSegment
-import kotlinx.coroutines.delay
+import com.android.offread.translate.domain.SegmentSplitter
+import com.android.offread.translate.domain.model.TranslationRequest
+import com.android.offread.translate.domain.usecase.TranslateChapterUseCase
+import com.android.offread.translate.domain.usecase.TranslateSegmentUseCase
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
 /**
- * [ChapterContentRepository] 스텁 어댑터(F-015). 캔드 세그먼트를 돌려주며, 마지막 세그먼트는 미번역으로 두어
- * 인라인 재시도(P-08)를 시연한다. 실제 온디바이스 번역 파이프라인·세그먼트 캐시(F-020/F-021)는 후속 인프라 태스크.
+ * [ChapterContentRepository] 어댑터(F-015). 원문을 세그먼트로 쪼개 번역 파이프라인(F-020)에 태운다.
+ * 캐시가 있으면 추론 없이 즉시 돌아온다(F-021).
+ *
+ * 원문 수집은 아직 스텁이다([StubChapterSource]) — 실제 수집은 F-012 인프라 태스크.
  */
 class ChapterContentRepositoryImpl
     @Inject
-    constructor() : ChapterContentRepository {
+    constructor(
+        private val libraryRepository: LibraryRepository,
+        private val splitter: SegmentSplitter,
+        private val translateChapter: TranslateChapterUseCase,
+        private val translateSegment: TranslateSegmentUseCase,
+    ) : ChapterContentRepository {
         override suspend fun getChapter(
             itemId: String,
             chapterIndex: Int,
         ): ChapterContent {
-            delay(STUB_LATENCY_MILLIS)
+            val collectionId = collectionIdOf(itemId)
+            val segments = splitter.split(StubChapterSource.text(chapterIndex))
+            val translated =
+                translateChapter(
+                    TranslationRequest(
+                        itemId = itemId,
+                        collectionId = collectionId,
+                        chapterIndex = chapterIndex,
+                        languagePair = languagePairOf(),
+                        segments = segments,
+                    ),
+                )
             return ChapterContent(
                 itemId = itemId,
                 chapterIndex = chapterIndex,
-                title = "${chapterIndex}화 — 갈림길",
-                segments =
-                    listOf(
-                        ReaderSegment(
-                            id = "seg-1",
-                            original = "ルーデウスは分かれ道の前で立ち止まった。",
-                            translated = "루데우스는 갈림길 앞에 멈춰 섰다. 왼쪽 길은 숲을 지나 라노아 왕국으로, 오른쪽 길은 산맥을 넘어 아스라 왕국으로 이어진다.",
-                        ),
-                        ReaderSegment(
-                            id = "seg-2",
-                            original = "「ソフィアならどちらを選んだろうか。」",
-                            translated = "\"소피아라면 어느 쪽을 골랐을까.\" 그는 지도를 접으며 중얼거렸다.",
-                        ),
-                        // 미번역 세그먼트 — 화면에서 원문 + 재시도로 노출(P-08)
-                        ReaderSegment(
-                            id = "seg-3",
-                            original = "風は谷を抜け、旅人の外套を強くはためかせた。",
-                            translated = null,
-                        ),
-                        ReaderSegment(
-                            id = "seg-4",
-                            original = "風向きが変わった。",
-                            translated = "바람이 방향을 바꿨다. 루데우스는 왼쪽 길로 걸음을 옮겼다.",
-                        ),
-                    ),
+                title = StubChapterSource.title(chapterIndex),
+                segments = translated.map { ReaderSegment(it.id, it.original, it.translated) },
             )
         }
 
@@ -54,11 +55,29 @@ class ChapterContentRepositoryImpl
             chapterIndex: Int,
             segmentId: String,
         ): String {
-            delay(STUB_LATENCY_MILLIS)
-            return "바람이 골짜기를 빠져나가 나그네의 외투를 세차게 나부끼게 했다."
+            val segment =
+                splitter
+                    .split(StubChapterSource.text(chapterIndex))
+                    .firstOrNull { it.id == segmentId }
+                    ?: error("다시 시도할 문단을 찾지 못했어요.")
+            val result =
+                translateSegment(
+                    itemId = itemId,
+                    collectionId = collectionIdOf(itemId),
+                    chapterIndex = chapterIndex,
+                    languagePair = languagePairOf(),
+                    segment = segment,
+                )
+            return result.translated ?: error("번역에 실패했어요. 잠시 후 다시 시도해 주세요.")
         }
 
-        private companion object {
-            const val STUB_LATENCY_MILLIS = 300L
-        }
+        private suspend fun collectionIdOf(itemId: String): String =
+            libraryRepository.observeItem(itemId).first()?.collectionId
+                ?: error("작품을 찾을 수 없어요.")
+
+        /**
+         * 원문 언어는 아직 수집 단계에서 확정되지 않는다(F-012 인프라). 스텁 원문이 일본어라
+         * 일→한 고정이며, 실제 수집이 붙으면 아이템 메타에서 결정한다.
+         */
+        private fun languagePairOf(): LanguagePair = LanguagePair.JA_KO
     }
