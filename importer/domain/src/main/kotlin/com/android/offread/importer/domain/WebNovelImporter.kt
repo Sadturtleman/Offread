@@ -7,7 +7,7 @@ import com.android.offread.importer.domain.model.WebNovelMetadata
  * 어댑터(import:data)에 감춘다.
  */
 interface WebNovelImporter {
-    /** 지원 사이트 화이트리스트에 속하는 URL 인가. */
+    /** 이 어댑터가 다룰 수 있는 URL 인가. */
     fun isSupported(url: String): Boolean
 
     /** URL 에서 작품 메타를 추출한다. */
