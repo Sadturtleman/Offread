@@ -3,7 +3,6 @@ package com.android.offread.translate.data
 import com.android.offread.core.entity.Language
 import com.android.offread.core.entity.LanguagePair
 import com.android.offread.translate.domain.TranslationEngine
-import com.android.offread.translate.domain.model.GlossaryEntry
 import com.google.android.gms.tasks.Task
 import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.nl.translate.TranslateLanguage
@@ -22,8 +21,7 @@ import kotlin.coroutines.resumeWithException
  * ML Kit 온디바이스 번역 어댑터(F-020).
  *
  * 언어쌍당 ~30MB 모델을 SDK 가 직접 받고 관리하므로 모델 배포 경로가 없어도 바로 번역이 된다.
- * 다만 LLM 이 아니라 **프롬프트로 용어를 주입할 수 없다** — 용어맵은 파이프라인 후처리에서
- * 고정 용어 치환으로만 반영된다(GlossaryPostProcessor).
+ * 가볍고 빠르지만 번역 품질은 전용 LLM(TranslateGemma)보다 낮다.
  *
  * 모델 다운로드는 셀룰러도 허용한다. P-05 의 'Wi-Fi 기본'은 수 GB 짜리 LLM 모델을 겨냥한
  * 것이고, 여기 모델은 언어쌍당 ~30MB 로 원문 수집(셀룰러 허용)과 같은 규모다. Wi-Fi 를 강제하면
@@ -40,7 +38,6 @@ class MlKitTranslationEngine
         override suspend fun translate(
             text: String,
             pair: LanguagePair,
-            glossary: List<GlossaryEntry>,
         ): String {
             val translator = translatorFor(pair)
             return translator.translate(text).await()

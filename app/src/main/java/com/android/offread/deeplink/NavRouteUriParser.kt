@@ -3,11 +3,10 @@ package com.android.offread.deeplink
 import android.net.Uri
 import androidx.navigation3.runtime.NavKey
 import com.android.offread.core.domain.navigation.AppRoutes
-import com.android.offread.core.domain.navigation.HomePage
 import com.android.offread.core.domain.navigation.NavRoute
+import com.android.offread.core.domain.navigation.TranslatePage
 import com.android.offread.navigation.GenericNavKey
 import com.android.offread.navigation.appRouteByPath
-import com.android.offread.onboarding.domain.SplashPage
 import timber.log.Timber
 
 private const val TAG = "[DeepLink]"
@@ -22,7 +21,7 @@ private const val TAG = "[DeepLink]"
  */
 private val EXTERNAL_ALLOWED_PATHS =
     setOf(
-        AppRoutes.HOME,
+        AppRoutes.TRANSLATE,
     )
 
 /**
@@ -31,7 +30,7 @@ private val EXTERNAL_ALLOWED_PATHS =
  * - args: 모든 query parameter 를 그대로 String 맵으로 옮긴다 (복합 타입은 호출부의 Args.from 이 디코딩).
  */
 fun Uri.toNavRoute(): NavRoute {
-    val segments = pathSegments?.takeIf { it.isNotEmpty() } ?: return NavRoute(HomePage.PATH)
+    val segments = pathSegments?.takeIf { it.isNotEmpty() } ?: return NavRoute(TranslatePage.PATH)
     val path = segments.joinToString("/")
     val args =
         queryParameterNames
@@ -46,13 +45,13 @@ fun Uri.toNavRoute(): NavRoute {
  * - 허용된 path 면 해당 [com.android.offread.navigation.AppRoute] 의 syntheticStack 을 사용한다.
  */
 fun resolveStartStack(uri: Uri?): List<NavKey> {
-    // 일반 실행(딥링크 없음)은 스플래시에서 시작해 온보딩 완료 여부로 온보딩/라이브러리를 분기한다(F-001).
-    if (uri == null) return listOf(GenericNavKey(SplashPage.PATH))
+    // 일반 실행(딥링크 없음)은 번역 화면에서 시작한다.
+    if (uri == null) return listOf(GenericNavKey(TranslatePage.PATH))
     val route = uri.toNavRoute()
     if (route.path !in EXTERNAL_ALLOWED_PATHS || appRouteByPath[route.path] == null) {
         // URI 전체(쿼리 포함)는 남기지 않고 path 만 남긴다(민감 인자 로깅 방지).
         Timber.tag(TAG).w("허용되지 않은 딥링크 진입 차단: path=%s", route.path)
-        return listOf(GenericNavKey(SplashPage.PATH))
+        return listOf(GenericNavKey(TranslatePage.PATH))
     }
     return appRouteByPath.getValue(route.path).syntheticStack(route.args)
 }

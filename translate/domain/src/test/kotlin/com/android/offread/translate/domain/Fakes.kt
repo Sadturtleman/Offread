@@ -1,8 +1,8 @@
 package com.android.offread.translate.domain
 
 import com.android.offread.core.entity.LanguagePair
-import com.android.offread.translate.domain.model.GlossaryEntry
 import com.android.offread.translate.domain.model.SegmentCacheKey
+import com.android.offread.translate.domain.model.WebPage
 
 /** 인메모리 [SegmentCache] 더블. */
 class FakeSegmentCache : SegmentCache {
@@ -13,28 +13,13 @@ class FakeSegmentCache : SegmentCache {
 
     override suspend fun put(
         key: SegmentCacheKey,
-        itemId: String,
-        chapterIndex: Int,
         translation: String,
     ) {
         entries[key] = translation
         puts += key
     }
 
-    override suspend fun invalidateItem(itemId: String) = entries.clear()
-
-    override suspend fun invalidateChapter(
-        itemId: String,
-        chapterIndex: Int,
-    ) = entries.clear()
-
-    override suspend fun invalidateCollection(collectionId: String) {
-        entries.keys.filter { it.collectionId == collectionId }.forEach { entries.remove(it) }
-    }
-
     override suspend fun stats(): CacheStats = CacheStats(entries.size, entries.values.sumOf { it.toByteArray().size.toLong() })
-
-    override suspend fun usageByItem(): Map<String, CacheStats> = emptyMap()
 
     override suspend fun clear() = entries.clear()
 
@@ -53,15 +38,12 @@ class FakeTranslationEngine(
     private val translation: (String) -> String = { "번역:$it" },
 ) : TranslationEngine {
     val translatedTexts = mutableListOf<String>()
-    var lastGlossary: List<GlossaryEntry> = emptyList()
 
     override suspend fun translate(
         text: String,
         pair: LanguagePair,
-        glossary: List<GlossaryEntry>,
     ): String {
         translatedTexts += text
-        lastGlossary = glossary
         error?.let { throw it }
         return translation(text)
     }
@@ -69,34 +51,16 @@ class FakeTranslationEngine(
     override suspend fun modelVersion(pair: LanguagePair): String = version
 }
 
-/** 고정 용어 목록을 돌려주는 [GlossaryProvider] 더블. */
-class FakeGlossaryProvider(
-    private val glossary: List<GlossaryEntry> = emptyList(),
-) : GlossaryProvider {
-    override suspend fun glossaryFor(collectionId: String): List<GlossaryEntry> = glossary
-}
+/** 고정 페이지를 돌려주는 [WebPageSource] 더블. */
+class FakeWebPageSource(
+    private val page: WebPage? = null,
+    private val error: Throwable? = null,
+) : WebPageSource {
+    val requestedUrls = mutableListOf<String>()
 
-/** 제안을 기록하는 [TermSuggestionSink] 더블. */
-class FakeTermSuggestionSink(
-    private val existing: Set<String> = emptySet(),
-) : TermSuggestionSink {
-    data class Suggestion(
-        val collectionId: String,
-        val source: String,
-        val translation: String,
-        val occurrenceCount: Int,
-    )
-
-    val suggestions = mutableListOf<Suggestion>()
-
-    override suspend fun existingSources(collectionId: String): Set<String> = existing
-
-    override suspend fun suggest(
-        collectionId: String,
-        source: String,
-        translation: String,
-        occurrenceCount: Int,
-    ) {
-        suggestions += Suggestion(collectionId, source, translation, occurrenceCount)
+    override suspend fun fetch(url: String): WebPage {
+        requestedUrls += url
+        error?.let { throw it }
+        return page ?: WebPage(url = url, title = "제목", text = "첫 문단.\n\n둘째 문단.")
     }
 }
