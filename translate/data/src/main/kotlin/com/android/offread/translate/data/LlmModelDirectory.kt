@@ -1,7 +1,6 @@
 package com.android.offread.translate.data
 
 import com.android.offread.translate.domain.LlmModelFile
-import com.android.offread.translate.domain.LlmRuntime
 import java.io.File
 
 /**
@@ -14,16 +13,16 @@ internal class LlmModelDirectory(
         root
             .listFiles()
             .orEmpty()
-            .filter { it.isFile }
-            .mapNotNull { file -> runtimeOf(file.name)?.let { LlmModelFile(file.name, file.length(), it) } }
+            .filter { it.isFile && isModel(it.name) }
+            .map { LlmModelFile(it.name, it.length()) }
             .sortedBy { it.name }
 
-    /** 해당 런타임에서 쓸 파일. 여러 개면 가장 최근에 넣은 것. */
-    fun latest(runtime: LlmRuntime): File? =
+    /** 쓸 모델 파일. 여러 개면 가장 최근에 넣은 것. */
+    fun latest(): File? =
         root
             .listFiles()
             .orEmpty()
-            .filter { it.isFile && runtimeOf(it.name) == runtime }
+            .filter { it.isFile && isModel(it.name) }
             .maxByOrNull { it.lastModified() }
 
     fun fileOf(name: String): File = File(root, sanitize(name))
@@ -36,13 +35,10 @@ internal class LlmModelDirectory(
 
     companion object {
         const val DIR_NAME = "llm"
+        const val EXTENSION = ".litertlm"
 
-        fun runtimeOf(fileName: String): LlmRuntime? =
-            when {
-                fileName.endsWith(".task", ignoreCase = true) -> LlmRuntime.MEDIAPIPE_TASK
-                fileName.endsWith(".litertlm", ignoreCase = true) -> LlmRuntime.LITERT_LM
-                else -> null
-            }
+        /** TranslateGemma(LiteRT-LM) 번들만 받는다. */
+        fun isModel(fileName: String): Boolean = fileName.endsWith(EXTENSION, ignoreCase = true)
 
         /** 사용자가 고른 파일명이 디렉터리를 벗어나지 않게 한다. */
         fun sanitize(displayName: String): String = displayName.substringAfterLast('/').substringAfterLast('\\')

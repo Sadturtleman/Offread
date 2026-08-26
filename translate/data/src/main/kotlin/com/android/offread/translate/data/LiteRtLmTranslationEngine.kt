@@ -2,10 +2,8 @@ package com.android.offread.translate.data
 
 import android.content.Context
 import com.android.offread.core.entity.LanguagePair
-import com.android.offread.translate.domain.LlmRuntime
 import com.android.offread.translate.domain.TranslateGemmaPromptBuilder
 import com.android.offread.translate.domain.TranslationEngine
-import com.android.offread.translate.domain.model.GlossaryEntry
 import com.google.ai.edge.litertlm.Backend
 import com.google.ai.edge.litertlm.Content
 import com.google.ai.edge.litertlm.Engine
@@ -24,8 +22,7 @@ import javax.inject.Singleton
  * TranslateGemma 4B 어댑터(F-020, LiteRT-LM 런타임).
  *
  * 번역 전용으로 학습된 모델이라 품질이 가장 좋다. 대신 제약이 붙는다.
- * - 프롬프트가 `<src>/<dst>/<text>` 태그 형식이라 **용어 지시문을 넣을 자리가 없다** →
- *   용어맵은 파이프라인 후처리에서 고정 용어 치환으로 보장한다.
+ * - 프롬프트가 `<src>/<dst>/<text>` 태그 형식으로 고정돼 있다.
  * - 커뮤니티 변환 번들 기준 컨텍스트가 1024 토큰이라 세그먼트가 길면 잘릴 수 있다.
  *   파이프라인의 문단 분할(기본 400자)이 이 범위 안에 들어온다.
  * - 백엔드는 CPU 고정 — 현재 이 번들의 GPU 초기화는 실패한다(모델 카드 명시).
@@ -44,7 +41,6 @@ class LiteRtLmTranslationEngine
         override suspend fun translate(
             text: String,
             pair: LanguagePair,
-            glossary: List<GlossaryEntry>,
         ): String {
             val engine = loadedEngine()
             val prompt = promptBuilder.build(text, pair)
@@ -65,7 +61,7 @@ class LiteRtLmTranslationEngine
 
         private suspend fun loadedEngine(): Engine =
             mutex.withLock {
-                val file = modelFile() ?: throw MissingLlmModelException(LlmRuntime.LITERT_LM)
+                val file = modelFile() ?: throw MissingLlmModelException
                 loaded?.takeIf { it.path == file.absolutePath && it.size == file.length() }?.let { return it.engine }
                 loaded?.engine?.close()
                 val engine =
@@ -81,7 +77,7 @@ class LiteRtLmTranslationEngine
                 LoadedEngine(engine, file.absolutePath, file.length()).also { loaded = it }.engine
             }
 
-        private fun modelFile(): File? = LlmModelDirectory(File(context.filesDir, LlmModelDirectory.DIR_NAME)).latest(LlmRuntime.LITERT_LM)
+        private fun modelFile(): File? = LlmModelDirectory(File(context.filesDir, LlmModelDirectory.DIR_NAME)).latest()
 
         /** 응답에서 텍스트 조각만 이어 붙인다(이미지·툴 응답은 번역에 쓰지 않는다). */
         private fun Message.text(): String =
@@ -100,3 +96,7 @@ class LiteRtLmTranslationEngine
             const val MAX_NUM_TOKENS = 1024
         }
     }
+
+/** TranslateGemma 모델 파일이 없을 때. */
+object MissingLlmModelException :
+    IllegalStateException("TranslateGemma 모델 파일이 없어요. 설정에서 .litertlm 모델을 가져와 주세요.")

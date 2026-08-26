@@ -21,18 +21,9 @@ object DatabaseModule {
     ): OffreadDatabase =
         Room
             .databaseBuilder(context, OffreadDatabase::class.java, DB_NAME)
-            // MVP: 미출시 단계라 스키마 변경 시 파괴적 재생성(모델·원문은 DB 밖이라 안전).
+            // 캐시뿐이라 스키마가 바뀌면 다시 만들어도 잃을 게 없다(다시 번역하면 된다).
             .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
-
-    @Provides
-    fun provideCollectionDao(database: OffreadDatabase): CollectionDao = database.collectionDao()
-
-    @Provides
-    fun provideItemDao(database: OffreadDatabase): ItemDao = database.itemDao()
-
-    @Provides
-    fun provideTermDao(database: OffreadDatabase): TermDao = database.termDao()
 
     @Provides
     fun provideSegmentCacheDao(database: OffreadDatabase): SegmentCacheDao = database.segmentCacheDao()

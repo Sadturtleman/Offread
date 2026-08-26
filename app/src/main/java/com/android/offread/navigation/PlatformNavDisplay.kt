@@ -11,7 +11,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.android.offread.core.domain.navigation.HomePage
+import com.android.offread.core.domain.navigation.TranslatePage
 import com.android.offread.core.ui.helper.LocalNavigationHelper
 import timber.log.Timber
 
@@ -39,7 +39,7 @@ fun PlatformNavDisplay(
                     val route = appRouteByPath[navKey.path]
                     if (route == null) {
                         Timber.tag("[Navigation]").w("Unknown path on render: %s", navKey.path)
-                        LocalNavigationHelper.current.navigateTo(HomePage)
+                        LocalNavigationHelper.current.navigateTo(TranslatePage)
                         return@entry
                     }
                     route.render(navKey.args)

@@ -37,18 +37,6 @@
                     android:host="app" />
             </intent-filter>
         </activity>
-
-        <!-- F-022: 앱이 WorkManager 설정(HiltWorkerFactory)을 직접 제공하므로 기본 초기화를 끈다. -->
-        <provider
-            android:name="androidx.startup.InitializationProvider"
-            android:authorities="${applicationId}.androidx-startup"
-            android:exported="false"
-            tools:node="merge">
-            <meta-data
-                android:name="androidx.work.WorkManagerInitializer"
-                android:value="androidx.startup"
-                tools:node="remove" />
-        </provider>
     </application>
 
 </manifest>
