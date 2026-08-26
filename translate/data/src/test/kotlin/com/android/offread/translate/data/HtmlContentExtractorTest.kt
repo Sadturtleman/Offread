@@ -7,64 +7,88 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class HtmlContentExtractorTest {
-    private fun extract(html: String) = HtmlContentExtractor.extract(Jsoup.parse(html))
+    private val url = "https://example.com/novel/1"
+
+    private fun extract(html: String) = HtmlContentExtractor.extract(url, Jsoup.parse(html))
+
+    /** Readability 는 본문이 어느 정도 길어야 본문으로 인정한다. */
+    private fun longBody(paragraph: String) = paragraph.repeat(8)
 
     @Test
-    fun `본문 컨테이너를 찾아 문단만 뽑는다`() {
+    fun `내비게이션과 사이드바를 걷어내고 본문만 남긴다`() {
+        val body = longBody("ルーデウスは分かれ道の前で立ち止まった。")
         val html =
             """
             <html><body>
-              <nav><p>메뉴</p></nav>
-              <div id="novel_honbun"><p>ルーデウスは歩いた。</p><p>風が吹いた。</p></div>
+              <nav><p>ホーム | ランキング | ログイン</p></nav>
+              <aside><p>広告です。今すぐ登録。</p></aside>
+              <article><p>$body</p><p>$body</p></article>
+              <footer><p>利用規約 プライバシー</p></footer>
             </body></html>
             """.trimIndent()
 
-        assertEquals("ルーデウスは歩いた。\n\n風が吹いた。", extract(html))
+        val text = extract(html)
+
+        assertTrue(text.contains("ルーデウス"))
+        assertFalse(text.contains("ランキング"))
+        assertFalse(text.contains("広告"))
+        assertFalse(text.contains("利用規約"))
     }
 
     @Test
-    fun `컨테이너를 못 찾으면 body 전체로 물러난다`() {
-        val html = "<html><body><p>本文です。</p></body></html>"
-
-        assertEquals("本文です。", extract(html))
-    }
-
-    @Test
-    fun `스크립트와 스타일은 번역 대상에서 뺀다`() {
+    fun `일본어 루비 읽기는 본문에서 빼고 한자만 남긴다`() {
         val html =
             """
             <html><body><article>
-              <script>var a = "スクリプト";</script>
-              <style>.x { color: red; }</style>
-              <p>本文です。</p>
+              <p>${"<ruby>魔力<rp>(</rp><rt>まりょく</rt><rp>)</rp></ruby>を高めた。".repeat(8)}</p>
             </article></body></html>
             """.trimIndent()
 
         val text = extract(html)
 
-        assertEquals("本文です。", text)
-        assertFalse(text.contains("スクリプト"))
+        assertTrue(text.contains("魔力"))
+        assertFalse(text.contains("まりょく"))
     }
 
     @Test
-    fun `문단 태그가 없으면 텍스트를 통째로 쓴다`() {
-        val html = "<html><body><article>本文です。<br>次の行。</article></body></html>"
+    fun `문단 경계를 살린다`() {
+        val first = longBody("最初の段落です。")
+        val second = longBody("次の段落です。")
+        val html = "<html><body><article><p>$first</p><p>$second</p></article></body></html>"
+
+        val text = extract(html)
+
+        assertEquals(listOf(first, second), text.split("\n\n"))
+    }
+
+    @Test
+    fun `스크립트와 스타일은 번역 대상에서 뺀다`() {
+        val body = longBody("本文です。")
+        val html =
+            """
+            <html><body><article>
+              <script>var a = "スクリプトの中身";</script>
+              <style>.x { color: red; }</style>
+              <p>$body</p>
+            </article></body></html>
+            """.trimIndent()
 
         val text = extract(html)
 
         assertTrue(text.contains("本文です。"))
-        assertTrue(text.contains("次の行。"))
+        assertFalse(text.contains("スクリプトの中身"))
+        assertFalse(text.contains("color: red"))
     }
 
     @Test
-    fun `빈 줄이 이어지면 하나로 줄인다`() {
-        val html = "<html><body><article>첫 줄.\n\n\n\n둘째 줄.</article></body></html>"
+    fun `본문을 못 찾으면 body 로 물러난다`() {
+        val html = "<html><body>短い本文です。</body></html>"
 
-        assertEquals("첫 줄.\n\n둘째 줄.", extract(html))
+        assertTrue(extract(html).contains("短い本文です。"))
     }
 
     @Test
-    fun `본문이 없으면 빈 문자열이다`() {
+    fun `내용이 없으면 빈 문자열이다`() {
         assertEquals("", extract("<html><body></body></html>"))
     }
 }

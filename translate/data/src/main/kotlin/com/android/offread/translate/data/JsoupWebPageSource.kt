@@ -28,7 +28,7 @@ class JsoupWebPageSource
                             .get()
                     }.getOrElse { throw PageFetchException(it) }
 
-                val text = HtmlContentExtractor.extract(document)
+                val text = HtmlContentExtractor.extract(url, document)
                 if (text.isBlank()) throw EmptyPageException
                 WebPage(url = url, title = document.title().ifBlank { url }, text = text)
             }

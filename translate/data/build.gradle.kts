@@ -44,6 +44,7 @@ dependencies {
 
     // 웹페이지 수집
     implementation(libs.jsoup)
+    implementation(libs.readability4j)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
