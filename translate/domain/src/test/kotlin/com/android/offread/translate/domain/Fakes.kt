@@ -2,7 +2,6 @@ package com.android.offread.translate.domain
 
 import com.android.offread.core.entity.LanguagePair
 import com.android.offread.translate.domain.model.SegmentCacheKey
-import com.android.offread.translate.domain.model.WebPage
 
 /** 인메모리 [SegmentCache] 더블. */
 class FakeSegmentCache : SegmentCache {
@@ -49,18 +48,4 @@ class FakeTranslationEngine(
     }
 
     override suspend fun modelVersion(pair: LanguagePair): String = version
-}
-
-/** 고정 페이지를 돌려주는 [WebPageSource] 더블. */
-class FakeWebPageSource(
-    private val page: WebPage? = null,
-    private val error: Throwable? = null,
-) : WebPageSource {
-    val requestedUrls = mutableListOf<String>()
-
-    override suspend fun fetch(url: String): WebPage {
-        requestedUrls += url
-        error?.let { throw it }
-        return page ?: WebPage(url = url, title = "제목", text = "첫 문단.\n\n둘째 문단.")
-    }
 }

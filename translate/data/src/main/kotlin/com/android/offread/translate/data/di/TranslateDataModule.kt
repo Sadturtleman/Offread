@@ -4,7 +4,6 @@ import com.android.offread.translate.data.AndroidNetworkStatus
 import com.android.offread.translate.data.DataStoreTranslationEnginePreference
 import com.android.offread.translate.data.FileLlmModelStore
 import com.android.offread.translate.data.HttpLlmModelDownloader
-import com.android.offread.translate.data.JsoupWebPageSource
 import com.android.offread.translate.data.LiteRtLmTranslationEngine
 import com.android.offread.translate.data.MlKitEngine
 import com.android.offread.translate.data.MlKitTranslationEngine
@@ -17,7 +16,6 @@ import com.android.offread.translate.domain.NetworkStatus
 import com.android.offread.translate.domain.SegmentCache
 import com.android.offread.translate.domain.TranslationEngine
 import com.android.offread.translate.domain.TranslationEnginePreference
-import com.android.offread.translate.domain.WebPageSource
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -30,10 +28,6 @@ abstract class TranslateDataModule {
     @Binds
     @Singleton
     abstract fun bindSegmentCache(impl: RoomSegmentCache): SegmentCache
-
-    @Binds
-    @Singleton
-    abstract fun bindWebPageSource(impl: JsoupWebPageSource): WebPageSource
 
     /** 실제로 쓰이는 엔진은 설정 선택에 따라 갈린다. */
     @Binds

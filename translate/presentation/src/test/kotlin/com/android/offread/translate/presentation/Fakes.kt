@@ -11,10 +11,8 @@ import com.android.offread.translate.domain.NetworkStatus
 import com.android.offread.translate.domain.SegmentCache
 import com.android.offread.translate.domain.TranslationEngine
 import com.android.offread.translate.domain.TranslationEnginePreference
-import com.android.offread.translate.domain.WebPageSource
 import com.android.offread.translate.domain.model.SegmentCacheKey
 import com.android.offread.translate.domain.model.TranslationEngineKind
-import com.android.offread.translate.domain.model.WebPage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
@@ -42,23 +40,21 @@ class FakeSegmentCache : SegmentCache {
 
 class FakeTranslationEngine(
     private val error: Throwable? = null,
+    private val failFor: Set<String> = emptySet(),
 ) : TranslationEngine {
+    val translatedTexts = mutableListOf<String>()
+
     override suspend fun translate(
         text: String,
         pair: LanguagePair,
-    ): String = error?.let { throw it } ?: "번역:$text"
+    ): String {
+        translatedTexts += text
+        error?.let { throw it }
+        if (text in failFor) throw IllegalStateException("추론 실패")
+        return "번역:$text"
+    }
 
     override suspend fun modelVersion(pair: LanguagePair): String = "v1"
-}
-
-class FakeWebPageSource(
-    private val page: WebPage? = null,
-    private val error: Throwable? = null,
-) : WebPageSource {
-    override suspend fun fetch(url: String): WebPage {
-        error?.let { throw it }
-        return page ?: WebPage(url = url, title = "제목", text = "첫 문단.\n\n둘째 문단.")
-    }
 }
 
 class FakeEnginePreference : TranslationEnginePreference {
