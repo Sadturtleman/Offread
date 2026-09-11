@@ -6,6 +6,7 @@ import com.android.offread.translate.domain.FakeTranslationEngine
 import com.android.offread.translate.domain.FakeWebPageSource
 import com.android.offread.translate.domain.SegmentSplitter
 import com.android.offread.translate.domain.TranslationEngine
+import com.android.offread.translate.domain.TranslationEngineUnavailableException
 import com.android.offread.translate.domain.model.Segment
 import com.android.offread.translate.domain.model.SegmentCacheKey
 import com.android.offread.translate.domain.model.WebPage
@@ -80,6 +81,32 @@ class TranslatePageUseCaseTest {
 
             assertEquals(listOf("번역:첫 문단.", null), page.segments.map { it.translated })
             assertEquals(1, cache.puts.size)
+        }
+
+    @Test
+    fun `엔진이 준비되지 않으면 페이지 전체가 실패한다`() =
+        runTest {
+            // 모델 파일이 없는 TranslateGemma 가 기본이라 첫 실행에서 바로 만나는 경로다.
+            // 문단마다 삼키면 원문만 잔뜩 뜨고 이유를 알 수 없어, 그대로 올린다.
+            val engine = FakeTranslationEngine(error = TranslationEngineUnavailableException("모델 파일이 없어요."))
+
+            val error = runCatching { useCase(engine)(url, LanguagePair.JA_KO) }.exceptionOrNull()
+
+            assertEquals("모델 파일이 없어요.", error?.message)
+            assertTrue(cache.puts.isEmpty())
+        }
+
+    @Test
+    fun `단건 재번역도 엔진 미준비는 그대로 던진다`() =
+        runTest {
+            val engine = FakeTranslationEngine(error = TranslationEngineUnavailableException("모델 파일이 없어요."))
+
+            val error =
+                runCatching {
+                    TranslateSegmentUseCase(engine, cache)(Segment("seg-1", "原文"), LanguagePair.JA_KO)
+                }.exceptionOrNull()
+
+            assertEquals("모델 파일이 없어요.", error?.message)
         }
 
     @Test

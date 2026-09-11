@@ -4,6 +4,7 @@ import android.content.Context
 import com.android.offread.core.entity.LanguagePair
 import com.android.offread.translate.domain.TranslateGemmaPromptBuilder
 import com.android.offread.translate.domain.TranslationEngine
+import com.android.offread.translate.domain.TranslationEngineUnavailableException
 import com.google.ai.edge.litertlm.Backend
 import com.google.ai.edge.litertlm.Content
 import com.google.ai.edge.litertlm.Engine
@@ -61,7 +62,7 @@ class LiteRtLmTranslationEngine
 
         private suspend fun loadedEngine(): Engine =
             mutex.withLock {
-                val file = modelFile() ?: throw MissingLlmModelException
+                val file = modelFile() ?: throw missingLlmModelException()
                 loaded?.takeIf { it.path == file.absolutePath && it.size == file.length() }?.let { return it.engine }
                 loaded?.engine?.close()
                 val engine =
@@ -97,6 +98,8 @@ class LiteRtLmTranslationEngine
         }
     }
 
-/** TranslateGemma 모델 파일이 없을 때. */
-object MissingLlmModelException :
-    IllegalStateException("TranslateGemma 모델 파일이 없어요. 설정에서 .litertlm 모델을 가져와 주세요.")
+/** TranslateGemma 모델 파일이 없을 때. 기본 엔진이라 첫 실행에서 바로 만나는 경로다. */
+private fun missingLlmModelException() =
+    TranslationEngineUnavailableException(
+        "TranslateGemma 모델 파일이 없어요. 설정에서 .litertlm 모델을 가져오거나 ML Kit 으로 바꿔 주세요.",
+    )

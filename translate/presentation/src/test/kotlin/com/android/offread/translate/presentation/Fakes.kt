@@ -57,7 +57,7 @@ class FakeWebPageSource(
 }
 
 class FakeEnginePreference : TranslationEnginePreference {
-    private val state = MutableStateFlow(TranslationEngineKind.ML_KIT)
+    private val state = MutableStateFlow(TranslationEngineKind.TRANSLATE_GEMMA)
 
     override val selected: Flow<TranslationEngineKind> = state
 

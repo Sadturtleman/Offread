@@ -73,7 +73,13 @@ class TranslateViewModel
             val target = page.segments.firstOrNull { it.id == segmentId } ?: return
             viewModelScope.launch {
                 dispatch(TranslateEvent.Retrying(segmentId))
-                val result = translateSegment(Segment(target.id, target.original), page.languagePair)
+                val result =
+                    runCatching { translateSegment(Segment(target.id, target.original), page.languagePair) }
+                        .getOrElse { error ->
+                            emitEffect(TranslateEffect.ShowMessage(error.message ?: "이 문단을 번역하지 못했어요."))
+                            dispatch(TranslateEvent.Retrying(null))
+                            return@launch
+                        }
                 dispatch(TranslateEvent.SegmentRetried(segmentId, result.translated))
                 if (result.translated == null) {
                     emitEffect(TranslateEffect.ShowMessage("이 문단을 번역하지 못했어요."))

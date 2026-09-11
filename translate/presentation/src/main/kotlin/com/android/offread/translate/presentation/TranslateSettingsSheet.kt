@@ -123,11 +123,12 @@ internal fun TranslationEngineKind.label(): String =
 
 private fun TranslationEngineKind.description(): String =
     when (this) {
-        TranslationEngineKind.ML_KIT ->
-            "언어쌍당 약 30MB 모델을 자동으로 받아 바로 번역해요. 가볍고 빠르지만 품질은 전용 모델보다 낮아요."
         TranslationEngineKind.TRANSLATE_GEMMA ->
-            "번역 전용 모델이라 품질이 가장 좋아요. INT4 기준 약 2GB · RAM 6GB 이상 권장이고, " +
+            "기본값이에요. 번역 전용 모델이라 품질이 가장 좋아요. INT4 기준 약 2GB · RAM 6GB 이상 권장이고, " +
                 "모델 파일을 직접 가져와야 해요. 첫 번역은 모델을 올리느라 10초쯤 걸려요."
+        TranslationEngineKind.ML_KIT ->
+            "모델 파일 없이 바로 번역돼요. 가볍고 빠르지만 품질이 낮아, 모델을 넣기 전이거나 " +
+                "기기가 버거울 때만 쓰는 걸 권해요."
     }
 
 internal fun formatSize(bytes: Long): String {

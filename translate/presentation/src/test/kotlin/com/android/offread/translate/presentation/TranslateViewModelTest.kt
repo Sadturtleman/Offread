@@ -1,6 +1,7 @@
 package com.android.offread.translate.presentation
 
 import com.android.offread.translate.domain.SegmentSplitter
+import com.android.offread.translate.domain.TranslationEngineUnavailableException
 import com.android.offread.translate.domain.model.TranslationEngineKind
 import com.android.offread.translate.domain.usecase.TranslatePageUseCase
 import com.android.offread.translate.domain.usecase.TranslateSegmentUseCase
@@ -102,12 +103,34 @@ class TranslateViewModelTest {
     }
 
     @Test
+    fun `모델 파일이 없으면 이유를 메시지로 알린다`() =
+        runTest {
+            val engine = FakeTranslationEngine(error = TranslationEngineUnavailableException("모델 파일이 없어요."))
+            val vm = viewModel(engine = engine)
+            vm.onIntent(TranslateIntent.UrlChanged("https://example.com/x"))
+
+            vm.onIntent(TranslateIntent.Translate)
+
+            assertEquals(
+                "모델 파일이 없어요.",
+                (vm.effect.first() as TranslateEffect.ShowMessage).message,
+            )
+            assertNull(vm.uiState.value.page)
+            assertFalse(vm.uiState.value.loading)
+        }
+
+    @Test
+    fun `기본 엔진은 TranslateGemma 다`() {
+        assertEquals(TranslationEngineKind.TRANSLATE_GEMMA, viewModel().uiState.value.engine)
+    }
+
+    @Test
     fun `엔진을 바꾸면 상태에 반영된다`() {
         val vm = viewModel()
 
-        vm.onIntent(TranslateIntent.SelectEngine(TranslationEngineKind.TRANSLATE_GEMMA))
+        vm.onIntent(TranslateIntent.SelectEngine(TranslationEngineKind.ML_KIT))
 
-        assertEquals(TranslationEngineKind.TRANSLATE_GEMMA, vm.uiState.value.engine)
+        assertEquals(TranslationEngineKind.ML_KIT, vm.uiState.value.engine)
     }
 
     @Test

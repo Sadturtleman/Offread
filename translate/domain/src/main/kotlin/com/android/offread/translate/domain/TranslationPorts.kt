@@ -17,6 +17,16 @@ interface TranslationEngine {
 }
 
 /**
+ * 엔진을 쓸 준비가 안 됐을 때(예: TranslateGemma 모델 파일 없음).
+ *
+ * 세그먼트 하나의 번역 실패와 달리 페이지 전체가 번역될 수 없는 상황이라, 유스케이스가
+ * 삼키지 않고 화면까지 올려 사용자가 이유를 보게 한다.
+ */
+class TranslationEngineUnavailableException(
+    message: String,
+) : IllegalStateException(message)
+
+/**
  * 웹페이지 수집 포트. HTTP·HTML 파싱은 어댑터에 감춘다.
  */
 interface WebPageSource {

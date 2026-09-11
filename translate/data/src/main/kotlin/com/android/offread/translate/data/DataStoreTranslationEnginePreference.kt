@@ -12,8 +12,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
- * 선택 엔진을 DataStore 에 영속한다. 기본값은 ML Kit — 모델 파일 없이 바로 번역되므로
- * 첫 실행에서 막히지 않는다.
+ * 선택 엔진을 DataStore 에 영속한다. 기본값은 TranslateGemma — 품질이 가장 좋기 때문이다.
+ * 모델 파일이 없으면 번역이 실패하고, 그 이유는 화면에 메시지로 뜬다.
  */
 @Singleton
 class DataStoreTranslationEnginePreference
@@ -25,7 +25,7 @@ class DataStoreTranslationEnginePreference
             dataStore.data.map { prefs ->
                 prefs[KEY_ENGINE]
                     ?.let { name -> runCatching { TranslationEngineKind.valueOf(name) }.getOrNull() }
-                    ?: TranslationEngineKind.ML_KIT
+                    ?: TranslationEngineKind.TRANSLATE_GEMMA
             }
 
         override suspend fun select(kind: TranslationEngineKind) {

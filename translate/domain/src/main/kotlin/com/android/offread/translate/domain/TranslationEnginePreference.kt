@@ -4,8 +4,8 @@ import com.android.offread.translate.domain.model.TranslationEngineKind
 import kotlinx.coroutines.flow.Flow
 
 /**
- * 선택된 번역 엔진 저장 포트(F-020). 기본값은 [TranslationEngineKind.ML_KIT] —
- * 별도 모델 파일 없이 바로 번역이 되므로 첫 실행에서 막히지 않는다.
+ * 선택된 번역 엔진 저장 포트(F-020). 기본값은 [TranslationEngineKind.TRANSLATE_GEMMA] —
+ * 번역 품질이 제품의 존재 이유라, 모델 파일을 한 번 가져오는 수고를 감수한다.
  */
 interface TranslationEnginePreference {
     val selected: Flow<TranslationEngineKind>
