@@ -1,7 +1,9 @@
 package com.android.offread.translate.data.di
 
+import com.android.offread.translate.data.AndroidNetworkStatus
 import com.android.offread.translate.data.DataStoreTranslationEnginePreference
 import com.android.offread.translate.data.FileLlmModelStore
+import com.android.offread.translate.data.HttpLlmModelDownloader
 import com.android.offread.translate.data.JsoupWebPageSource
 import com.android.offread.translate.data.LiteRtLmTranslationEngine
 import com.android.offread.translate.data.MlKitEngine
@@ -9,7 +11,9 @@ import com.android.offread.translate.data.MlKitTranslationEngine
 import com.android.offread.translate.data.RoomSegmentCache
 import com.android.offread.translate.data.SwitchingTranslationEngine
 import com.android.offread.translate.data.TranslateGemmaEngine
+import com.android.offread.translate.domain.LlmModelDownloader
 import com.android.offread.translate.domain.LlmModelStore
+import com.android.offread.translate.domain.NetworkStatus
 import com.android.offread.translate.domain.SegmentCache
 import com.android.offread.translate.domain.TranslationEngine
 import com.android.offread.translate.domain.TranslationEnginePreference
@@ -49,6 +53,14 @@ abstract class TranslateDataModule {
     @Binds
     @Singleton
     abstract fun bindLlmModelStore(impl: FileLlmModelStore): LlmModelStore
+
+    @Binds
+    @Singleton
+    abstract fun bindLlmModelDownloader(impl: HttpLlmModelDownloader): LlmModelDownloader
+
+    @Binds
+    @Singleton
+    abstract fun bindNetworkStatus(impl: AndroidNetworkStatus): NetworkStatus
 
     @Binds
     @Singleton

@@ -3,7 +3,10 @@ package com.android.offread.translate.presentation
 import androidx.lifecycle.viewModelScope
 import com.android.offread.core.entity.LanguagePair
 import com.android.offread.core.ui.mvi.MviViewModel
+import com.android.offread.translate.domain.LlmModelDownloader
 import com.android.offread.translate.domain.LlmModelStore
+import com.android.offread.translate.domain.ModelDownloadState
+import com.android.offread.translate.domain.NetworkStatus
 import com.android.offread.translate.domain.SegmentCache
 import com.android.offread.translate.domain.TranslationEnginePreference
 import com.android.offread.translate.domain.model.Segment
@@ -11,6 +14,8 @@ import com.android.offread.translate.domain.model.TranslationEngineKind
 import com.android.offread.translate.domain.usecase.TranslatePageUseCase
 import com.android.offread.translate.domain.usecase.TranslateSegmentUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -28,12 +33,22 @@ class TranslateViewModel
         private val enginePreference: TranslationEnginePreference,
         private val modelStore: LlmModelStore,
         private val cache: SegmentCache,
-    ) : MviViewModel<TranslateIntent, TranslateUiState, TranslateEvent, TranslateEffect>(TranslateUiState()) {
+        private val downloader: LlmModelDownloader,
+        private val networkStatus: NetworkStatus,
+    ) : MviViewModel<TranslateIntent, TranslateUiState, TranslateEvent, TranslateEffect>(
+            TranslateUiState(modelSizeBytes = downloader.release.sizeBytes),
+        ) {
+        private var downloadJob: Job? = null
+
         init {
             viewModelScope.launch {
                 enginePreference.selected.collect { kind -> dispatch(TranslateEvent.EngineChanged(kind)) }
             }
-            refreshModels()
+            viewModelScope.launch {
+                dispatch(TranslateEvent.ModelsChanged(modelStore.installed()))
+                // 모델이 없으면 실행하자마자 받아 둔다. 2GB 라 종량제 망에서는 사용자가 직접 누르게 한다.
+                if (currentState.modelMissing && networkStatus.isUnmetered()) startDownload()
+            }
             refreshCache()
         }
 
@@ -48,7 +63,42 @@ class TranslateViewModel
                 is TranslateIntent.ImportModel -> importModel(intent.uri)
                 is TranslateIntent.DeleteModel -> deleteModel(intent.name)
                 TranslateIntent.ClearCache -> clearCache()
+                TranslateIntent.DownloadModel -> startDownload()
+                TranslateIntent.CancelDownload -> cancelDownload()
             }
+        }
+
+        /**
+         * 모델을 내려받는다. 이어받기는 어댑터가 하므로 여기서는 다시 부르기만 하면 된다.
+         * 화면을 떠나면 viewModelScope 와 함께 멈추고, 다음 실행에서 받던 자리부터 잇는다.
+         */
+        private fun startDownload() {
+            if (downloadJob?.isActive == true) return
+            downloadJob =
+                viewModelScope.launch {
+                    downloader
+                        .download()
+                        .catch { error ->
+                            dispatch(TranslateEvent.DownloadChanged(null))
+                            emitEffect(TranslateEffect.ShowMessage(error.message ?: "모델을 받지 못했어요."))
+                        }.collect { state ->
+                            when (state) {
+                                is ModelDownloadState.Running -> dispatch(TranslateEvent.DownloadChanged(state))
+                                is ModelDownloadState.Completed -> {
+                                    dispatch(TranslateEvent.DownloadChanged(null))
+                                    refreshModels()
+                                    emitEffect(TranslateEffect.ShowMessage("번역 모델을 받았어요."))
+                                }
+                            }
+                        }
+                }
+        }
+
+        private fun cancelDownload() {
+            downloadJob?.cancel()
+            downloadJob = null
+            dispatch(TranslateEvent.DownloadChanged(null))
+            emitEffect(TranslateEffect.ShowMessage("받던 만큼은 남겨 뒀어요. 다시 누르면 이어서 받아요."))
         }
 
         private fun translate() {
@@ -166,6 +216,7 @@ class TranslateViewModel
                 is TranslateEvent.ModelsChanged -> state.copy(models = event.models)
                 is TranslateEvent.Importing -> state.copy(importing = event.importing)
                 is TranslateEvent.CacheChanged -> state.copy(cache = event.cache)
+                is TranslateEvent.DownloadChanged -> state.copy(download = event.download)
             }
 
         private companion object {
