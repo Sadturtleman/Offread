@@ -6,6 +6,7 @@ import com.android.offread.core.ui.mvi.ReducerEvent
 import com.android.offread.core.ui.mvi.UiState
 import com.android.offread.translate.domain.CacheStats
 import com.android.offread.translate.domain.LlmModelFile
+import com.android.offread.translate.domain.ModelDownloadState
 import com.android.offread.translate.domain.model.TranslatedPage
 import com.android.offread.translate.domain.model.TranslationEngineKind
 
@@ -20,8 +21,15 @@ data class TranslateUiState(
     val cache: CacheStats = CacheStats.EMPTY,
     /** 재번역 중인 문단 id. 버튼 중복 탭을 막는다. */
     val retryingSegmentId: String? = null,
+    /** 진행 중인 모델 다운로드. 없으면 null. */
+    val download: ModelDownloadState.Running? = null,
+    /** 내려받을 모델 크기. 시작 전에 얼마나 큰지 보여 준다. */
+    val modelSizeBytes: Long = 0L,
 ) : UiState {
     val canTranslate: Boolean get() = url.isNotBlank() && !loading
+
+    /** 고른 엔진이 모델 파일을 요구하는데 아직 없다. 번역을 눌러도 실패한다. */
+    val modelMissing: Boolean get() = engine.requiresModelFile && models.isEmpty()
 }
 
 sealed interface TranslateIntent : MviIntent {
@@ -52,6 +60,10 @@ sealed interface TranslateIntent : MviIntent {
     ) : TranslateIntent
 
     data object ClearCache : TranslateIntent
+
+    data object DownloadModel : TranslateIntent
+
+    data object CancelDownload : TranslateIntent
 }
 
 sealed interface TranslateEvent : ReducerEvent {
@@ -94,6 +106,10 @@ sealed interface TranslateEvent : ReducerEvent {
 
     data class CacheChanged(
         val cache: CacheStats,
+    ) : TranslateEvent
+
+    data class DownloadChanged(
+        val download: ModelDownloadState.Running?,
     ) : TranslateEvent
 }
 

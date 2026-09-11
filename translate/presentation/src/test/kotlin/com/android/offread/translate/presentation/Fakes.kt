@@ -2,8 +2,12 @@ package com.android.offread.translate.presentation
 
 import com.android.offread.core.entity.LanguagePair
 import com.android.offread.translate.domain.CacheStats
+import com.android.offread.translate.domain.LlmModelDownloader
 import com.android.offread.translate.domain.LlmModelFile
+import com.android.offread.translate.domain.LlmModelRelease
 import com.android.offread.translate.domain.LlmModelStore
+import com.android.offread.translate.domain.ModelDownloadState
+import com.android.offread.translate.domain.NetworkStatus
 import com.android.offread.translate.domain.SegmentCache
 import com.android.offread.translate.domain.TranslationEngine
 import com.android.offread.translate.domain.TranslationEnginePreference
@@ -13,6 +17,7 @@ import com.android.offread.translate.domain.model.TranslationEngineKind
 import com.android.offread.translate.domain.model.WebPage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 
 class FakeSegmentCache : SegmentCache {
     private val entries = mutableMapOf<SegmentCacheKey, String>()
@@ -82,4 +87,41 @@ class FakeLlmModelStore : LlmModelStore {
     override suspend fun delete(name: String) {
         files.removeAll { it.name == name }
     }
+}
+
+/** 진행률을 정해진 대로 흘려보내는 [LlmModelDownloader] 더블. */
+class FakeLlmModelDownloader(
+    private val error: Throwable? = null,
+    private val store: FakeLlmModelStore? = null,
+) : LlmModelDownloader {
+    var started = 0
+        private set
+
+    override val release =
+        LlmModelRelease(
+            fileName = "translategemma-4b-it-int4-generic.litertlm",
+            url = "https://example.com/model.litertlm",
+            sizeBytes = TOTAL_BYTES,
+        )
+
+    override fun download(): Flow<ModelDownloadState> =
+        flow {
+            started++
+            error?.let { throw it }
+            emit(ModelDownloadState.Running(TOTAL_BYTES / 2, TOTAL_BYTES))
+            val file = LlmModelFile(release.fileName, TOTAL_BYTES)
+            store?.files?.add(file)
+            emit(ModelDownloadState.Completed(file))
+        }
+
+    private companion object {
+        const val TOTAL_BYTES = 2_000_000_000L
+    }
+}
+
+/** 망 종류를 고정하는 [NetworkStatus] 더블. */
+class FakeNetworkStatus(
+    private val unmetered: Boolean = true,
+) : NetworkStatus {
+    override suspend fun isUnmetered(): Boolean = unmetered
 }
