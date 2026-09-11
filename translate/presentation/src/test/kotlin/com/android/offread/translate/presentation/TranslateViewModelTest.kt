@@ -25,12 +25,16 @@ class TranslateViewModelTest {
     private fun viewModel(
         engine: FakeTranslationEngine = FakeTranslationEngine(),
         source: FakeWebPageSource = FakeWebPageSource(),
+        downloader: FakeLlmModelDownloader = FakeLlmModelDownloader(),
+        networkStatus: FakeNetworkStatus = FakeNetworkStatus(unmetered = false),
     ) = TranslateViewModel(
         TranslatePageUseCase(source, SegmentSplitter(), engine, cache),
         TranslateSegmentUseCase(engine, cache),
         preference,
         modelStore,
         cache,
+        downloader,
+        networkStatus,
     )
 
     @Test
@@ -81,6 +85,8 @@ class TranslateViewModelTest {
                 preference,
                 modelStore,
                 cache,
+                FakeLlmModelDownloader(),
+                FakeNetworkStatus(unmetered = false),
             )
         vm.onIntent(TranslateIntent.UrlChanged("https://example.com/x"))
         vm.onIntent(TranslateIntent.Translate)
@@ -117,6 +123,59 @@ class TranslateViewModelTest {
             )
             assertNull(vm.uiState.value.page)
             assertFalse(vm.uiState.value.loading)
+        }
+
+    @Test
+    fun `모델이 없고 Wi-Fi 면 실행하자마자 받는다`() {
+        val downloader = FakeLlmModelDownloader(store = modelStore)
+
+        val vm = viewModel(downloader = downloader, networkStatus = FakeNetworkStatus(unmetered = true))
+
+        assertEquals(1, downloader.started)
+        assertEquals(
+            listOf(downloader.release.fileName),
+            vm.uiState.value.models
+                .map { it.name },
+        )
+        assertFalse(vm.uiState.value.modelMissing)
+    }
+
+    @Test
+    fun `종량제 망에서는 말없이 받지 않는다`() {
+        val downloader = FakeLlmModelDownloader(store = modelStore)
+
+        val vm = viewModel(downloader = downloader, networkStatus = FakeNetworkStatus(unmetered = false))
+
+        assertEquals(0, downloader.started)
+        assertTrue(vm.uiState.value.modelMissing)
+        assertEquals(downloader.release.sizeBytes, vm.uiState.value.modelSizeBytes)
+    }
+
+    @Test
+    fun `직접 누르면 종량제 망에서도 받는다`() {
+        val downloader = FakeLlmModelDownloader(store = modelStore)
+        val vm = viewModel(downloader = downloader, networkStatus = FakeNetworkStatus(unmetered = false))
+
+        vm.onIntent(TranslateIntent.DownloadModel)
+
+        assertEquals(1, downloader.started)
+        assertNull(vm.uiState.value.download)
+        assertFalse(vm.uiState.value.modelMissing)
+    }
+
+    @Test
+    fun `다운로드가 실패하면 이유를 알린다`() =
+        runTest {
+            val downloader = FakeLlmModelDownloader(error = IllegalStateException("모델 서버가 응답하지 않아요."))
+            val vm = viewModel(downloader = downloader)
+
+            vm.onIntent(TranslateIntent.DownloadModel)
+
+            assertEquals(
+                "모델 서버가 응답하지 않아요.",
+                (vm.effect.first() as TranslateEffect.ShowMessage).message,
+            )
+            assertNull(vm.uiState.value.download)
         }
 
     @Test

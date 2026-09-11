@@ -15,7 +15,9 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -82,6 +84,15 @@ fun TranslateScreen(
             Text(if (state.loading) "번역 중…" else "번역하기")
         }
 
+        if (state.modelMissing) {
+            ModelDownloadCard(
+                state = state,
+                onDownload = { viewModel.onIntent(TranslateIntent.DownloadModel) },
+                onCancel = { viewModel.onIntent(TranslateIntent.CancelDownload) },
+                modifier = Modifier.padding(top = 12.dp),
+            )
+        }
+
         when {
             state.loading && state.page == null ->
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -125,6 +136,54 @@ fun TranslateScreen(
             onDeleteModel = { viewModel.onIntent(TranslateIntent.DeleteModel(it)) },
             onClearCache = { viewModel.onIntent(TranslateIntent.ClearCache) },
         )
+    }
+}
+
+/**
+ * 모델이 아직 없을 때 뜨는 카드. Wi-Fi 면 ViewModel 이 이미 받기 시작했고, 종량제 망이면
+ * 여기 버튼이 시작점이다. 2GB 라 크기를 먼저 보여 준다.
+ */
+@Composable
+private fun ModelDownloadCard(
+    state: TranslateUiState,
+    onDownload: () -> Unit,
+    onCancel: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val download = state.download
+    Column(
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                .padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            text = "번역 모델이 필요해요",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+        )
+        if (download == null) {
+            Text(
+                text = "TranslateGemma 4B · ${formatSize(state.modelSizeBytes)}. 한 번 받으면 오프라인에서도 번역해요.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Button(onClick = onDownload) { Text("모델 내려받기") }
+            return@Column
+        }
+        Text(
+            text = "${formatSize(download.downloadedBytes)} / ${formatSize(download.totalBytes)} 받는 중…",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        LinearProgressIndicator(
+            progress = { download.fraction },
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedButton(onClick = onCancel) { Text("멈추기") }
     }
 }
 

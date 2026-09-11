@@ -33,6 +33,8 @@ dependencies {
     implementation(project(":core:datastore"))
 
     implementation(libs.kotlinx.coroutines.core)
+    // ConnectivityManager 조회(getSystemService)
+    implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.datastore.preferences)
 
     implementation(libs.hilt.android)
