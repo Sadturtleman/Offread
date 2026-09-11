@@ -1,9 +1,13 @@
+import com.google.firebase.appdistribution.gradle.firebaseAppDistribution
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.google.services)
+    alias(libs.plugins.firebase.appdistribution)
 }
 
 android {
@@ -26,6 +30,17 @@ android {
     }
 
     buildTypes {
+        debug {
+            // App Distribution 배포 대상. 디버그 키로 서명돼 테스터가 바로 설치할 수 있다.
+            // 릴리스 서명 키가 생기면 이 블록을 release 로 옮긴다.
+            firebaseAppDistribution {
+                artifactType = "APK"
+                // 콘솔에 같은 이름의 테스터 그룹(별칭)이 있어야 한다.
+                groups = "testers"
+                // ./gradlew ... -PdistNotes="무엇이 바뀌었는지" 로 덮어쓴다.
+                releaseNotes = providers.gradleProperty("distNotes").getOrElse("내부 테스트 빌드")
+            }
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
@@ -77,6 +92,10 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     implementation(libs.timber)
+
+    // firebase — google-services 플러그인이 app/google-services.json 을 읽어 설정을 주입한다.
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
 
     testImplementation(libs.junit)
     testImplementation(libs.konsist)

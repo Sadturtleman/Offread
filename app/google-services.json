@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "997651060327",
+    "project_id": "offread-50ac0",
+    "storage_bucket": "offread-50ac0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:997651060327:android:2c062befd6c63456f7e6c2",
+        "android_client_info": {
+          "package_name": "com.android.offread"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBjkQwmIKNEPzCPM1qjI_86wugk3-XPwlI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
