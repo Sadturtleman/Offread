@@ -3,9 +3,11 @@ package com.android.offread.translate.presentation
 import com.android.offread.translate.domain.SegmentSplitter
 import com.android.offread.translate.domain.TranslationEngineUnavailableException
 import com.android.offread.translate.domain.model.TranslationEngineKind
-import com.android.offread.translate.domain.usecase.TranslatePageUseCase
-import com.android.offread.translate.domain.usecase.TranslateSegmentUseCase
+import com.android.offread.translate.domain.model.VisibleText
+import com.android.offread.translate.domain.usecase.TranslateTextsUseCase
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -22,14 +24,14 @@ class TranslateViewModelTest {
     private val preference = FakeEnginePreference()
     private val modelStore = FakeLlmModelStore()
 
+    private val texts = listOf(VisibleText("0", "첫 노드."), VisibleText("1", "둘째 노드."))
+
     private fun viewModel(
         engine: FakeTranslationEngine = FakeTranslationEngine(),
-        source: FakeWebPageSource = FakeWebPageSource(),
         downloader: FakeLlmModelDownloader = FakeLlmModelDownloader(),
         networkStatus: FakeNetworkStatus = FakeNetworkStatus(unmetered = false),
     ) = TranslateViewModel(
-        TranslatePageUseCase(source, SegmentSplitter(), engine, cache),
-        TranslateSegmentUseCase(engine, cache),
+        TranslateTextsUseCase(SegmentSplitter(), engine, cache),
         preference,
         modelStore,
         cache,
@@ -38,74 +40,75 @@ class TranslateViewModelTest {
     )
 
     @Test
-    fun `주소를 넣고 번역하면 문단이 채워진다`() {
+    fun `주소를 넣고 번역하면 웹뷰에 그 주소를 띄운다`() {
         val vm = viewModel()
         vm.onIntent(TranslateIntent.UrlChanged("https://example.com/novel/1"))
 
         vm.onIntent(TranslateIntent.Translate)
 
-        val page = vm.uiState.value.page
-        assertEquals("제목", page?.title)
-        assertEquals(listOf("번역:첫 문단.", "번역:둘째 문단."), page?.segments?.map { it.translated })
-        assertFalse(vm.uiState.value.loading)
+        assertEquals("https://example.com/novel/1", vm.uiState.value.loadedUrl)
+        assertTrue(vm.uiState.value.loading)
     }
 
     @Test
-    fun `주소가 비면 번역하지 않는다`() {
+    fun `스킴을 빼먹어도 주소로 연다`() {
+        val vm = viewModel()
+        vm.onIntent(TranslateIntent.UrlChanged("example.com/novel/1"))
+
+        vm.onIntent(TranslateIntent.Translate)
+
+        assertEquals("https://example.com/novel/1", vm.uiState.value.loadedUrl)
+    }
+
+    @Test
+    fun `주소가 비면 열지 않는다`() {
         val vm = viewModel()
 
         vm.onIntent(TranslateIntent.Translate)
 
-        assertNull(vm.uiState.value.page)
+        assertNull(vm.uiState.value.loadedUrl)
         assertFalse(vm.uiState.value.canTranslate)
     }
 
     @Test
-    fun `수집에 실패하면 메시지로 알린다`() =
+    fun `모아 온 노드를 번역해 제자리에 돌려보낸다`() =
         runTest {
-            val vm = viewModel(source = FakeWebPageSource(error = IllegalStateException("페이지를 가져오지 못했어요.")))
-            vm.onIntent(TranslateIntent.UrlChanged("https://example.com/x"))
+            val vm = viewModel()
 
-            vm.onIntent(TranslateIntent.Translate)
+            vm.onIntent(TranslateIntent.TextsCollected(texts))
 
-            assertEquals(
-                "페이지를 가져오지 못했어요.",
-                (vm.effect.first() as TranslateEffect.ShowMessage).message,
-            )
-            assertNull(vm.uiState.value.page)
+            val applied =
+                vm.effect
+                    .take(texts.size)
+                    .toList()
+                    .filterIsInstance<TranslateEffect.ApplyTranslation>()
+            assertEquals(listOf("0", "1"), applied.map { it.id })
+            assertEquals(listOf("번역:첫 노드.", "번역:둘째 노드."), applied.map { it.text })
+            assertEquals(2, vm.uiState.value.translated)
+            assertFalse(vm.uiState.value.translating)
         }
 
     @Test
-    fun `번역에 실패한 문단은 재시도로 채운다`() {
-        val failing = FakeTranslationEngine(error = IllegalStateException("모델 없음"))
-        val vm =
-            TranslateViewModel(
-                TranslatePageUseCase(FakeWebPageSource(), SegmentSplitter(), failing, cache),
-                TranslateSegmentUseCase(FakeTranslationEngine(), cache),
-                preference,
-                modelStore,
-                cache,
-                FakeLlmModelDownloader(),
-                FakeNetworkStatus(unmetered = false),
-            )
-        vm.onIntent(TranslateIntent.UrlChanged("https://example.com/x"))
-        vm.onIntent(TranslateIntent.Translate)
-        assertTrue(
-            vm.uiState.value.page
-                ?.segments
-                ?.all { it.translated == null } == true,
-        )
+    fun `실패한 노드를 세고 다시 시도할 수 있다`() {
+        val engine = FakeTranslationEngine(failFor = setOf("둘째 노드."))
+        val vm = viewModel(engine = engine)
+        vm.onIntent(TranslateIntent.TextsCollected(texts))
+        assertEquals(1, vm.uiState.value.failed)
 
-        vm.onIntent(TranslateIntent.RetrySegment("seg-1"))
+        vm.onIntent(TranslateIntent.RetryFailed)
 
-        assertEquals(
-            "번역:첫 문단.",
-            vm.uiState.value.page
-                ?.segments
-                ?.first()
-                ?.translated,
-        )
-        assertNull(vm.uiState.value.retryingSegmentId)
+        // 실패한 노드만 다시 돌린다 — 성공한 것까지 또 추론하지 않는다.
+        assertEquals(listOf("첫 노드.", "둘째 노드.", "둘째 노드."), engine.translatedTexts)
+    }
+
+    @Test
+    fun `번역할 일본어가 없으면 아무것도 세지 않는다`() {
+        val vm = viewModel()
+
+        vm.onIntent(TranslateIntent.TextsCollected(emptyList()))
+
+        assertEquals(0, vm.uiState.value.total)
+        assertFalse(vm.uiState.value.translating)
     }
 
     @Test
@@ -113,16 +116,13 @@ class TranslateViewModelTest {
         runTest {
             val engine = FakeTranslationEngine(error = TranslationEngineUnavailableException("모델 파일이 없어요."))
             val vm = viewModel(engine = engine)
-            vm.onIntent(TranslateIntent.UrlChanged("https://example.com/x"))
 
-            vm.onIntent(TranslateIntent.Translate)
+            vm.onIntent(TranslateIntent.TextsCollected(texts))
 
             assertEquals(
                 "모델 파일이 없어요.",
                 (vm.effect.first() as TranslateEffect.ShowMessage).message,
             )
-            assertNull(vm.uiState.value.page)
-            assertFalse(vm.uiState.value.loading)
         }
 
     @Test
@@ -213,8 +213,7 @@ class TranslateViewModelTest {
     @Test
     fun `캐시를 비우면 사용량이 0 이 된다`() {
         val vm = viewModel()
-        vm.onIntent(TranslateIntent.UrlChanged("https://example.com/x"))
-        vm.onIntent(TranslateIntent.Translate)
+        vm.onIntent(TranslateIntent.TextsCollected(texts))
         assertTrue(vm.uiState.value.cache.entryCount > 0)
 
         vm.onIntent(TranslateIntent.ClearCache)

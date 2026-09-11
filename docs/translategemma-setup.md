@@ -4,12 +4,19 @@
 **기본 엔진이다.** 모델 파일을 넣기 전에는 번역이 실패하고 그 이유가 화면에 뜬다 —
 모델을 넣을 수 없는 기기라면 설정에서 ML Kit 으로 바꾼다(가볍지만 품질이 낮다).
 
-## 왜 파일을 직접 넣어야 하나
+## 앱이 알아서 받는다
 
-Gemma 계열 가중치는 **라이선스 동의가 필요한 gated 배포물**이라 앱이 대신 내려받지 않는다.
-사용자가 받아 둔 파일을 설정에서 골라 앱 전용 저장소로 가져오는 방식만 제공한다.
+공식 Gemma 가중치는 라이선스 동의가 필요한 gated 배포물이지만, 커뮤니티 변환본은 게이트 없이
+공개돼 있다. 앱은 그 파일을 직접 내려받는다.
 
-## 절차
+- 파일: `translategemma-4b-it-int4-generic.litertlm` (약 1.9GB)
+- 모델이 없으면 **Wi-Fi 일 때 실행하자마자** 받기 시작한다. 종량제 망에서는 크기를 보여 주고
+  사용자가 누를 때만 받는다.
+- 끊기면 받은 만큼 `.part` 로 남겨 두고 다음에 이어받는다. 다 받은 뒤에야 최종 파일명이 된다.
+
+아래는 **직접 변환한 파일을 쓰거나 다른 변환본을 넣고 싶을 때**의 수동 절차다.
+
+## 수동으로 넣는 절차
 
 1. Hugging Face 에 로그인하고 [google/translategemma-4b-it](https://huggingface.co/google/translategemma-4b-it) 에서 Gemma 이용약관에 동의한다.
 2. 안드로이드용 변환본을 받는다 — [barakplasma/translategemma-4b-it-android-task-quantized](https://huggingface.co/barakplasma/translategemma-4b-it-android-task-quantized)

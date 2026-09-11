@@ -1,7 +1,5 @@
 package com.android.offread.translate.domain.model
 
-import com.android.offread.core.entity.LanguagePair
-
 /** 번역 단위 원문 조각(F-020 세그먼트 분할 결과). */
 data class Segment(
     val id: String,
@@ -9,29 +7,21 @@ data class Segment(
 )
 
 /**
- * 번역 결과 세그먼트.
+ * 웹뷰가 페이지에서 긁어 온 텍스트 노드 하나.
  *
- * @property translated 번역문. null 이면 추론 실패 — 화면은 원문을 노출하고 재시도를 제공한다.
- * @property fromCache 캐시 히트로 추론 없이 나온 결과인지
+ * @property id 페이지 안에서의 노드 식별자. 번역문을 되돌려 줄 때 이 값으로 자리를 찾는다.
  */
-data class TranslatedSegment(
+data class VisibleText(
     val id: String,
-    val original: String,
-    val translated: String?,
-    val fromCache: Boolean = false,
-)
-
-/** 수집한 웹페이지 원문. */
-data class WebPage(
-    val url: String,
-    val title: String,
     val text: String,
 )
 
-/** 번역해서 보여줄 페이지 하나. */
-data class TranslatedPage(
-    val url: String,
-    val title: String,
-    val languagePair: LanguagePair,
-    val segments: List<TranslatedSegment>,
+/**
+ * 노드 하나의 번역 결과.
+ *
+ * @property translated null 이면 추론 실패 — 그 자리는 원문 그대로 둔다.
+ */
+data class TranslatedText(
+    val id: String,
+    val translated: String?,
 )
