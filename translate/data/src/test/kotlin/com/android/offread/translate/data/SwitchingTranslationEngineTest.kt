@@ -14,7 +14,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 private class FakePreference(
-    initial: TranslationEngineKind = TranslationEngineKind.ML_KIT,
+    initial: TranslationEngineKind = TranslationEngineKind.TRANSLATE_GEMMA,
 ) : TranslationEnginePreference {
     private val state = MutableStateFlow(initial)
 
@@ -41,26 +41,26 @@ class SwitchingTranslationEngineTest {
     private val engine = SwitchingTranslationEngine(preference, NamedEngine("mlkit"), NamedEngine("translategemma"))
 
     @Test
-    fun `기본값은 ML Kit 이다`() =
+    fun `기본값은 TranslateGemma 다`() =
         runTest {
-            assertEquals("mlkit:原文", engine.translate("原文", LanguagePair.JA_KO))
+            assertEquals("translategemma:原文", engine.translate("原文", LanguagePair.JA_KO))
         }
 
     @Test
     fun `설정을 바꾸면 다음 번역부터 새 엔진을 쓴다`() =
         runTest {
-            preference.select(TranslationEngineKind.TRANSLATE_GEMMA)
+            preference.select(TranslationEngineKind.ML_KIT)
 
-            assertEquals("translategemma:原文", engine.translate("原文", LanguagePair.JA_KO))
+            assertEquals("mlkit:原文", engine.translate("原文", LanguagePair.JA_KO))
         }
 
     @Test
     fun `엔진마다 모델 버전이 달라 캐시가 섞이지 않는다`() =
         runTest {
-            val mlKitVersion = engine.modelVersion(LanguagePair.JA_KO)
-            preference.select(TranslationEngineKind.TRANSLATE_GEMMA)
+            val gemmaVersion = engine.modelVersion(LanguagePair.JA_KO)
+            preference.select(TranslationEngineKind.ML_KIT)
 
-            assertNotEquals(mlKitVersion, engine.modelVersion(LanguagePair.JA_KO))
+            assertNotEquals(gemmaVersion, engine.modelVersion(LanguagePair.JA_KO))
         }
 
     @Test

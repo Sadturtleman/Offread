@@ -4,6 +4,7 @@ import com.android.offread.core.entity.LanguagePair
 import com.android.offread.translate.domain.SegmentCache
 import com.android.offread.translate.domain.SegmentSplitter
 import com.android.offread.translate.domain.TranslationEngine
+import com.android.offread.translate.domain.TranslationEngineUnavailableException
 import com.android.offread.translate.domain.WebPageSource
 import com.android.offread.translate.domain.model.Segment
 import com.android.offread.translate.domain.model.SegmentCacheKey
@@ -15,7 +16,8 @@ import javax.inject.Inject
  * MVP 본체: URL 을 받아 페이지를 수집하고 문단 단위로 번역한다.
  *
  * 캐시가 히트하면 추론을 건너뛰고, 세그먼트 하나가 실패해도 나머지는 계속 번역한다 —
- * 문단 하나 때문에 페이지 전체가 막히지 않게 한다.
+ * 문단 하나 때문에 페이지 전체가 막히지 않게 한다. 다만 엔진 자체가 준비되지 않았다면
+ * ([TranslationEngineUnavailableException]) 모든 문단이 같은 이유로 실패하므로 그대로 올린다.
  */
 class TranslatePageUseCase
     @Inject
@@ -46,8 +48,11 @@ class TranslatePageUseCase
                 return TranslatedSegment(segment.id, segment.original, cached, fromCache = true)
             }
             val translated =
-                runCatching { engine.translate(segment.original, pair) }.getOrNull()
-                    ?: return TranslatedSegment(segment.id, segment.original, translated = null)
+                runCatching { engine.translate(segment.original, pair) }
+                    .getOrElse { error ->
+                        if (error is TranslationEngineUnavailableException) throw error
+                        return TranslatedSegment(segment.id, segment.original, translated = null)
+                    }
             cache.put(key, translated)
             return TranslatedSegment(segment.id, segment.original, translated)
         }
@@ -67,9 +72,11 @@ class TranslateSegmentUseCase
             val modelVersion = engine.modelVersion(pair)
             val key = SegmentCacheKey.of(segment.original, modelVersion)
             val translated =
-                runCatching { engine.translate(segment.original, pair) }.getOrElse {
-                    return TranslatedSegment(segment.id, segment.original, translated = null)
-                }
+                runCatching { engine.translate(segment.original, pair) }
+                    .getOrElse { error ->
+                        if (error is TranslationEngineUnavailableException) throw error
+                        return TranslatedSegment(segment.id, segment.original, translated = null)
+                    }
             cache.put(key, translated)
             return TranslatedSegment(segment.id, segment.original, translated)
         }

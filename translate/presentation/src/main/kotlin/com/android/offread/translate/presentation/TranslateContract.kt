@@ -14,7 +14,7 @@ data class TranslateUiState(
     val page: TranslatedPage? = null,
     val loading: Boolean = false,
     val settingsVisible: Boolean = false,
-    val engine: TranslationEngineKind = TranslationEngineKind.ML_KIT,
+    val engine: TranslationEngineKind = TranslationEngineKind.TRANSLATE_GEMMA,
     val models: List<LlmModelFile> = emptyList(),
     val importing: Boolean = false,
     val cache: CacheStats = CacheStats.EMPTY,
